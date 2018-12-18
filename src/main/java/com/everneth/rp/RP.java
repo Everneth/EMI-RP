@@ -1,4 +1,4 @@
-package rp;
+package com.everneth.rp;
 
 import co.aikar.commands.BukkitCommandManager;
 import co.aikar.idb.DB;
@@ -47,5 +47,10 @@ public class RP extends JavaPlugin
         config.addDefault("dbprefix", "ev_");
         config.options().copyDefaults(true);
         this.saveConfig();
+    }
+
+    public static RP getPlugin()
+    {
+        return plugin;
     }
 }
