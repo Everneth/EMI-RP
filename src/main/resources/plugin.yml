@@ -1,0 +1,5 @@
+name: EMI-RP
+version: 0.1.0
+main: com.everneth.rp.RP
+author: tptmike, sterling
+commands:
