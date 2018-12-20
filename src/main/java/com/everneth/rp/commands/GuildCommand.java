@@ -16,12 +16,83 @@ import java.util.concurrent.CompletableFuture;
 
 @CommandAlias("guild")
 public class GuildCommand extends BaseCommand {
-    @Subcommand("guild create")
+    @Subcommand("create")
     @CommandPermission("emi.rp.guild")
     public void onGuildPlayerCreate(CommandSender sender, String name)
     {
         createGuild(name, (Player)sender);
     }
+    @Subcommand("invitemember")
+    @CommandPermission("emi.rp.guild.officer")
+    public void onGuildInvite(CommandSender sender, Player player)
+    {
+        DbRow invitee = getPlayerRow(player);
+        DbRow officer = getGuildMember((Player) sender);
+        if(isGuilded(invitee))
+        {
+           sender.sendMessage("Cannot invite " + player.getName() + " to the guild. They must leave their current guild first.");
+        }
+        else if(officer.getInt("rank_id") > 1)
+        {
+            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
+        }
+        else
+        {
+            try {
+                DB.executeInsert(
+                        "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
+                        officer.getInt("guild_id"),
+                        invitee.getInt("player_id"),
+                        3
+                );
+            }
+            catch (SQLException e)
+            {
+                RP.getPlugin().getLogger().info(e.getMessage());
+            }
+        }
+    }
+
+    /***
+     * Helper/class methods below for cleanliness.
+     * Keep commands at the top.
+     */
+
+    private DbRow getGuildMember(Player p)
+    {
+        CompletableFuture<DbRow> futurePlayer;
+        DbRow member = new DbRow();
+        futurePlayer = DB.getFirstRowAsync(
+                "SELECT player_id, guild_id, rank_id FROM players p " +
+                        "INNER JOIN guild_members gm ON p.player_id = gm.player_id " +
+                        "WHERE player_uuid = ?",
+                p.getUniqueId().toString()
+        );
+        try {
+            member = futurePlayer.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return member;
+    }
+
+    private DbRow getPlayerRow(Player p)
+    {
+        CompletableFuture<DbRow> futurePlayer;
+        DbRow player = new DbRow();
+        futurePlayer = DB.getFirstRowAsync("SELECT * FROM players WHERE player_uuid = ?", p.getUniqueId().toString());
+        try {
+            player = futurePlayer.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return player;
+    }
+
 
     private void createGuild(String name, Player p1)
     {
