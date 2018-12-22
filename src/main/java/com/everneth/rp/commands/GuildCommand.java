@@ -22,7 +22,7 @@ public class GuildCommand extends BaseCommand {
     {
         createGuild(name, (Player)sender);
     }
-    @Subcommand("invitemember")
+    @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
     public void onGuildInvite(CommandSender sender, Player player)
     {
@@ -52,10 +52,48 @@ public class GuildCommand extends BaseCommand {
             }
         }
     }
-
+    @Subcommand("remove")
+    @CommandPermission("emi.rp.guild.officer")
+    public void onGuildRemove(CommandSender sender, Player player)
+    {
+        // Get officer record and member record
+        DbRow officer = getGuildMember((Player) sender);
+        DbRow member = getGuildMember(player);
+        // Is the officer actually an officer?
+        if(officer.getInt("rank_id") > 1) {
+            // Yes, are we removing a player that belongs to the officers guild?
+            if(officer.getInt("guild_id").equals(member.getInt("guild_id"))) {
+                // Yes, run the query
+                try {
+                    DB.executeUpdate(
+                            "DELETE FROM guild_members WHERE player_id = ?",
+                            member.getInt("player_id")
+                    );
+                } catch (SQLException e) {
+                    RP.getPlugin().getLogger().info(e.getMessage());
+                }
+            }
+            else
+            {
+                // No, silly goose!
+                sender.sendMessage(player.getName() + " is not a member of your guild! >_>");
+            }
+        }
+        else
+        {
+            // We're not even an officer. Why is this happening?!
+            sender.sendMessage("T_T This is for officers only.");
+        }
+    }
     /***
      * Helper/class methods below for cleanliness.
      * Keep commands at the top.
+     *
+     *  NO GUILD = 0
+     *  GUILD MEMBER = 1
+     *  GUILD OFFICER = 2
+     *  GUILD LEADER = 3
+     *
      */
 
     private DbRow getGuildMember(Player p)
@@ -139,12 +177,12 @@ public class GuildCommand extends BaseCommand {
                 // if we have an Id, it shouldn't be 0
                 if(guildId != 0)
                 {
-                    // Insert the new guild leader as a member, leader ID is 1
+                    // Insert the new guild leader as a member, leader ID is 3
                     DB.executeInsert(
                             "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
                             guildId,
                             result.getInt("player_id"),
-                            1
+                            3
                     );
                     // return true so the transaction can commit
                     stm.commit();
