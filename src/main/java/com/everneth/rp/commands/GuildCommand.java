@@ -7,7 +7,9 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import co.aikar.idb.DbStatement;
+import com.everneth.rp.InviteManager;
 import com.everneth.rp.RP;
+import com.everneth.rp.models.Invite;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,6 +24,21 @@ public class GuildCommand extends BaseCommand {
     {
         createGuild(name, (Player)sender);
     }
+    @Subcommand("accept")
+    public void onGuildAccept(CommandSender sender)
+    {
+        Player player = (Player) sender;
+        Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
+        guildInvite.accept();
+    }
+    @Subcommand("decline")
+    public void onGuildDecline(CommandSender sender)
+    {
+        Player player = (Player) sender;
+        Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
+        guildInvite.decline();
+    }
+
     @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
     public void onGuildInvite(CommandSender sender, Player player)
@@ -32,12 +49,15 @@ public class GuildCommand extends BaseCommand {
         {
            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. They must leave their current guild first.");
         }
-        else if(officer.getInt("rank_id") > 1)
+        else if(officer.getInt("rank_id") <= 1)
         {
-            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
+            sender.sendMessage("Cannnmmlvlllot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
         }
-        else
+        else if(!isGuilded(invitee) && officer.getInt("rank_id") > 1)
         {
+            Invite guildInvite = new Invite(1, 1, player);
+            InviteManager.getInviteManager().addInvite(player, guildInvite);
+            guildInvite.send();
             try {
                 DB.executeInsert(
                         "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
