@@ -1,5 +1,6 @@
 package com.everneth.rp.models;
 
+import com.everneth.rp.InviteManager;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -12,14 +13,16 @@ public class Invite {
     int playerId;
     Timer timer;
     Player player;
+    Player officer;
     private TextComponent accept;
     private TextComponent decline;
 
-    public Invite(int guildId, int playerId, Player player)
+    public Invite(int guildId, int playerId, Player player, Player officer)
     {
         this.guildId = guildId;
         this.playerId = playerId;
         this.player = player;
+        this.officer = officer;
         this.timer = new Timer();
         this.accept = new TextComponent();
         accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/guild accept"));
@@ -38,11 +41,30 @@ public class Invite {
     }
     public void accept()
     {
-
+        this.officer.sendMessage(ChatColor.GREEN + this.player.getName() + " has accepted your invite!");
+        InviteManager.getInviteManager().removeInvite(this);
+        timer.cancel();
     }
     public void decline()
     {
-
+        this.officer.sendMessage(ChatColor.RED + this.player.getName() + " has declined your invite or it has timed out!");
+        InviteManager.getInviteManager().removeInvite(this);
+        timer.cancel();
     }
 
+    public int getGuildId() {
+        return guildId;
+    }
+
+    public int getPlayerId() {
+        return playerId;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Player getOfficer() {
+        return officer;
+    }
 }

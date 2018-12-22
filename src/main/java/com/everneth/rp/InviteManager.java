@@ -26,6 +26,10 @@ public class InviteManager {
     {
         inviteMap.remove(player.getUniqueId(), guildInvite);
     }
+    public void removeInvite(Invite invite)
+    {
+        inviteMap.remove(invite.getPlayer().getUniqueId());
+    }
     public Invite findInvite(Player player)
     {
         return inviteMap.get(player.getUniqueId());

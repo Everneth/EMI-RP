@@ -10,6 +10,7 @@ import co.aikar.idb.DbStatement;
 import com.everneth.rp.InviteManager;
 import com.everneth.rp.RP;
 import com.everneth.rp.models.Invite;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -27,9 +28,19 @@ public class GuildCommand extends BaseCommand {
     @Subcommand("accept")
     public void onGuildAccept(CommandSender sender)
     {
+        boolean hasAdded = false;
         Player player = (Player) sender;
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
-        guildInvite.accept();
+
+        hasAdded = addToGuild(guildInvite.getGuildId(), guildInvite.getPlayerId());
+        if(hasAdded)
+        {
+            guildInvite.accept();
+        }
+        else
+        {
+            sender.sendMessage(ChatColor.RED + "ERROR: Could not add to guild. Contact Comms.");
+        }
     }
     @Subcommand("decline")
     public void onGuildDecline(CommandSender sender)
@@ -51,25 +62,13 @@ public class GuildCommand extends BaseCommand {
         }
         else if(officer.getInt("rank_id") <= 1)
         {
-            sender.sendMessage("Cannnmmlvlllot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
+            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
         }
         else if(!isGuilded(invitee) && officer.getInt("rank_id") > 1)
         {
-            Invite guildInvite = new Invite(1, 1, player);
+            Invite guildInvite = new Invite(officer.getInt("guild_id"), invitee.getInt("player_id"), player, (Player) sender);
             InviteManager.getInviteManager().addInvite(player, guildInvite);
             guildInvite.send();
-            try {
-                DB.executeInsert(
-                        "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
-                        officer.getInt("guild_id"),
-                        invitee.getInt("player_id"),
-                        3
-                );
-            }
-            catch (SQLException e)
-            {
-                RP.getPlugin().getLogger().info(e.getMessage());
-            }
         }
     }
     @Subcommand("remove")
@@ -151,6 +150,23 @@ public class GuildCommand extends BaseCommand {
         return player;
     }
 
+    private boolean addToGuild(int guildId, int playerId)
+    {
+        try {
+            DB.executeInsert(
+                    "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
+                    guildId,
+                    playerId,
+                    3
+            );
+            return true;
+        }
+        catch (SQLException e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+            return false;
+        }
+    }
 
     private void createGuild(String name, Player p1)
     {
