@@ -7,15 +7,17 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class Invite {
-    int guildId;
-    int playerId;
-    Timer timer;
-    Player player;
-    Player officer;
+    private int guildId;
+    private int playerId;
+    private Timer timer;
+    private Player player;
+    private Player officer;
     private TextComponent accept;
     private TextComponent decline;
+    private TimerTask onTimeout;
 
     public Invite(int guildId, int playerId, Player player, Player officer)
     {
@@ -32,12 +34,19 @@ public class Invite {
         decline.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/guild decline"));
         accept.setText("DECLINE");
         accept.setColor(ChatColor.RED);
+        TimerTask onTimeout = new TimerTask() {
+            @Override
+            public void run() {
+                Invite playerInvite = InviteManager.getInviteManager().findInvite(player);
+                playerInvite.decline();
+            }
+        };
     }
     public void send()
     {
         player.sendMessage("You have been invited to join " + guildId + " by " + playerId);
         player.sendMessage( accept.getText() + " | " + decline.getText());
-        //this.timer.schedule();
+        this.timer.schedule(this.onTimeout, 600000L);
     }
     public void accept()
     {
