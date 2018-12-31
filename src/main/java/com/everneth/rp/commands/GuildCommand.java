@@ -49,6 +49,27 @@ public class GuildCommand extends BaseCommand {
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
         guildInvite.decline();
     }
+    @Subcommand("leave")
+    public void onGuildLeave(CommandSender sender)
+    {
+        if(isGuilded(getPlayerRow((Player) sender))) {
+            DbRow member = getGuildMember((Player) sender);
+            try {
+                DB.executeUpdate(
+                        "DELETE FROM guild_members WHERE player_id = ?",
+                        member.getInt("player_id")
+                );
+                sender.sendMessage("You have left the guild!");
+            } catch (SQLException e) {
+                RP.getPlugin().getLogger().info(e.getMessage());
+                sender.sendMessage("ERROR: Could not leave guild, contact a GM.");
+            }
+        }
+        else
+        {
+            sender.sendMessage("Must be in a guild before you can leave it, ya turkey baster.");
+        }
+    }
 
     @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
