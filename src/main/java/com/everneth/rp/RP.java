@@ -9,6 +9,7 @@ import com.everneth.rp.commands.GuildCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+
 import java.io.File;
 
 public class RP extends JavaPlugin

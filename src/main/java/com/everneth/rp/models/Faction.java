@@ -1,11 +1,14 @@
 package com.everneth.rp.models;
 
-public class Guild {
+import java.util.ArrayList;
+
+public class Faction {
     private int id;
     private String name;
     private int leaderId;
+    ArrayList<String> members;
 
-    public Guild(int id, String name, int leaderId)
+    public Faction(int id, String name, int leaderId)
     {
         this.id = id;
         this.name = name;

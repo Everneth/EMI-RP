@@ -1,30 +1,30 @@
 package com.everneth.rp.models;
 
-public class GuildBuilder {
+public class FactionBuilder {
     private int id;
     private String name;
     private int leaderId;
 
-    public GuildBuilder() { }
+    public FactionBuilder() { }
 
-    public Guild buildGuild()
+    public Faction buildGuild()
     {
-        return new Guild(id, name, leaderId);
+        return new Faction(id, name, leaderId);
     }
 
-    public GuildBuilder name(String _name)
+    public FactionBuilder name(String _name)
     {
         this.name = _name;
         return this;
     }
 
-    public GuildBuilder age(int id)
+    public FactionBuilder age(int id)
     {
         this.id = id;
         return this;
     }
 
-    public GuildBuilder leader(int leaderId)
+    public FactionBuilder leader(int leaderId)
     {
         this.leaderId = leaderId;
         return this;
