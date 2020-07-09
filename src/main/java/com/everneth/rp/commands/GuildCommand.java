@@ -7,7 +7,10 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import co.aikar.idb.DbStatement;
+import com.everneth.rp.InviteManager;
 import com.everneth.rp.RP;
+import com.everneth.rp.models.Invite;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,6 +25,52 @@ public class GuildCommand extends BaseCommand {
     {
         createGuild(name, (Player)sender);
     }
+    @Subcommand("accept")
+    public void onGuildAccept(CommandSender sender)
+    {
+        boolean hasAdded = false;
+        Player player = (Player) sender;
+        Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
+
+        hasAdded = addToGuild(guildInvite.getGuildId(), guildInvite.getPlayerId());
+        if(hasAdded)
+        {
+            guildInvite.accept();
+        }
+        else
+        {
+            sender.sendMessage(ChatColor.RED + "ERROR: Could not add to guild. Contact Comms.");
+        }
+    }
+    @Subcommand("decline")
+    public void onGuildDecline(CommandSender sender)
+    {
+        Player player = (Player) sender;
+        Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
+        guildInvite.decline();
+    }
+    @Subcommand("leave")
+    public void onGuildLeave(CommandSender sender)
+    {
+        if(isGuilded(getPlayerRow((Player) sender))) {
+            DbRow member = getGuildMember((Player) sender);
+            try {
+                DB.executeUpdate(
+                        "DELETE FROM guild_members WHERE player_id = ?",
+                        member.getInt("player_id")
+                );
+                sender.sendMessage("You have left the guild!");
+            } catch (SQLException e) {
+                RP.getPlugin().getLogger().info(e.getMessage());
+                sender.sendMessage("ERROR: Could not leave guild, contact a GM.");
+            }
+        }
+        else
+        {
+            sender.sendMessage("Must be in a guild before you can leave it, ya turkey baster.");
+        }
+    }
+
     @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
     public void onGuildInvite(CommandSender sender, Player player)
@@ -32,24 +81,15 @@ public class GuildCommand extends BaseCommand {
         {
            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. They must leave their current guild first.");
         }
-        else if(officer.getInt("rank_id") > 1)
+        else if(officer.getInt("rank_id") <= 1)
         {
             sender.sendMessage("Cannot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
         }
-        else
+        else if(!isGuilded(invitee) && officer.getInt("rank_id") > 1)
         {
-            try {
-                DB.executeInsert(
-                        "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
-                        officer.getInt("guild_id"),
-                        invitee.getInt("player_id"),
-                        3
-                );
-            }
-            catch (SQLException e)
-            {
-                RP.getPlugin().getLogger().info(e.getMessage());
-            }
+            Invite guildInvite = new Invite(officer.getInt("guild_id"), invitee.getInt("player_id"), player, (Player) sender);
+            InviteManager.getInviteManager().addInvite(player, guildInvite);
+            guildInvite.send();
         }
     }
     @Subcommand("remove")
@@ -131,6 +171,23 @@ public class GuildCommand extends BaseCommand {
         return player;
     }
 
+    private boolean addToGuild(int guildId, int playerId)
+    {
+        try {
+            DB.executeInsert(
+                    "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
+                    guildId,
+                    playerId,
+                    3
+            );
+            return true;
+        }
+        catch (SQLException e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+            return false;
+        }
+    }
 
     private void createGuild(String name, Player p1)
     {
