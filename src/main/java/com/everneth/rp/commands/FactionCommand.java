@@ -4,7 +4,11 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.idb.DbRow;
+import com.everneth.rp.models.Faction;
+import com.everneth.rp.utils.PlayerUtils;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 @CommandAlias("faction")
 public class FactionCommand extends BaseCommand {
@@ -28,7 +32,7 @@ public class FactionCommand extends BaseCommand {
     }
     @Subcommand("remove")
     @CommandPermission("faction.officer.remove")
-    public void onRemove(CommandSender sender, String name)
+    public void onMemberRemove(CommandSender sender, String name)
     {
 
     }
@@ -47,6 +51,18 @@ public class FactionCommand extends BaseCommand {
     @Subcommand("rank")
     @CommandPermission("faction.leader.rank")
     public void onRank(CommandSender sender, int id, String name)
+    {
+
+    }
+    @Subcommand("add")
+    @CommandPermission("faction.admin.addfaction")
+    public void onAdd(CommandSender sender, String name)
+    {
+
+    }
+    @Subcommand("rm")
+    @CommandPermission("faction.admin.removefaction")
+    public void onGuildRemove(CommandSender sender, String name)
     {
 
     }
