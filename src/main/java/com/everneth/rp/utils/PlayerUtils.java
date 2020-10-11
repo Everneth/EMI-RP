@@ -7,6 +7,7 @@ import com.everneth.rp.models.EMIPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayerUtils {
@@ -45,6 +46,21 @@ public class PlayerUtils {
         CompletableFuture<DbRow> futurePlayer;
         DbRow player = new DbRow();
         futurePlayer = DB.getFirstRowAsync("SELECT * FROM players WHERE discord_id = ?", discordId);
+        try {
+            player = futurePlayer.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return player;
+    }
+
+    public static DbRow getPlayerRow(UUID uuid)
+    {
+        CompletableFuture<DbRow> futurePlayer;
+        DbRow player = new DbRow();
+        futurePlayer = DB.getFirstRowAsync("SELECT * FROM players WHERE player_uuid = ?", uuid.toString());
         try {
             player = futurePlayer.get();
         }
