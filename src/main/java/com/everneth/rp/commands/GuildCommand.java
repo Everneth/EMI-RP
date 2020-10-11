@@ -9,6 +9,8 @@ import co.aikar.idb.DbRow;
 import co.aikar.idb.DbStatement;
 import com.everneth.rp.InviteManager;
 import com.everneth.rp.RP;
+import com.everneth.rp.models.Guild;
+import com.everneth.rp.models.GuildResponse;
 import com.everneth.rp.models.Invite;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -21,9 +23,12 @@ import java.util.concurrent.CompletableFuture;
 public class GuildCommand extends BaseCommand {
     @Subcommand("create")
     @CommandPermission("emi.rp.guild")
-    public void onGuildPlayerCreate(CommandSender sender, String name)
+    public void onGuildPlayerCreate(CommandSender sender, String playerName, String guildName, String primColor, String secColor, boolean isRp)
     {
-        createGuild(name, (Player)sender);
+        Guild guild = new Guild(guildName, playerName, primColor, secColor, isRp);
+
+        GuildResponse response = guild.createGuild();
+        sender.sendMessage(response.getMessage());
     }
     @Subcommand("accept")
     public void onGuildAccept(CommandSender sender)

@@ -22,16 +22,15 @@ public class Guild {
     private String createdDate;
     private int tier;
 
-
     public Guild(){}
 
-    public Guild(String name, Player commandSender, String primaryColor, String secondaryColor, boolean isRp)
+    public Guild(String name, String guildLeaderName, String primaryColor, String secondaryColor, boolean isRp)
     {
         Date now = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         this.name = name;
-        this.leaderId = getLeaderPlayerId(commandSender);
+        this.leaderId = getLeaderPlayerId(guildLeaderName);
         this.score = 0;
         this.primaryColor = primaryColor;
         this.secondaryColor = secondaryColor;
@@ -41,45 +40,50 @@ public class Guild {
         this.tier = 1;
     }
 
-    private int createGuild(Guild guild)
+    public GuildResponse createGuild()
     {
+        GuildResponse response = checksPass(this);
 
-        if(checksPass(guild)) {
-
+        if(response.isSuccessfulAction())
+        {
             try {
                 DB.executeInsert(
                         "INSERT INTO guilds (guild_name, guild_leader_id, guild_score, guild_primary_color," +
                                 " guild_secondary_color, guild_banner_path, guild_is_rp, guild_created_date, guild_tier) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        guild.getName(),
-                        guild.getLeaderId(),
-                        guild.getScore(),
-                        guild.getPrimaryColor(),
-                        guild.getSecondaryColor(),
+                        this.getName(),
+                        this.getLeaderId(),
+                        this.getScore(),
+                        this.getPrimaryColor(),
+                        this.getSecondaryColor(),
                         null,
-                        guild.isRp(),
-                        guild.getCreatedDate(),
-                        guild.getTier()
+                        this.isRp(),
+                        this.getCreatedDate(),
+                        this.getTier()
                 );
+                response.setSuccessfulAction(true);
+                response.setMessage("Guild creation successful!");
             } catch (SQLException e) {
                 RP.getPlugin().getLogger().warning(e.getMessage());
+                response.setMessage("Guild creation failed. Please check logs as this may be a SQL error.");
+                response.setSuccessfulAction(false);
             }
         }
-        return 0;
+        return response;
     }
 
-    private boolean checksPass(Guild guild)
+    private GuildResponse checksPass(Guild guild)
     {
         if(guild.getLeaderId() == 0)
-            return false;
+            return new GuildResponse("Invalid player name. Are you sure the name is spelled correctly?", false);
         // If we made it this far, let's check and see if this player is guilded
         if(guild.isGuilded(guild.getLeaderId()))
-            return false;
+            return new GuildResponse("This player is still guilded... please have them /gquit and try again.", false);
         // Valid player, not guilded... lets check and see if there is a guild by the name we want
         if(guild.guildExists(guild.getName()))
-            return false;
+            return new GuildResponse("A guild already exists by this name.", false);
         // We've passed all checks
-        return true;
+        return new GuildResponse("Guild creation checks passed. If this message is returned, an error occurred during creation.", true);
     }
 
     public String getName() {
@@ -154,10 +158,10 @@ public class Guild {
         this.tier = tier;
     }
 
-    private int getLeaderPlayerId(Player leader)
+    private int getLeaderPlayerId(String leader)
     {
 
-        DbRow result = PlayerUtils.getPlayerRow(leader.getName());
+        DbRow result = PlayerUtils.getPlayerRow(leader);
         if(result.isEmpty())
             return 0;
         else
