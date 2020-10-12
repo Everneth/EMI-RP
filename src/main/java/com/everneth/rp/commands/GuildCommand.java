@@ -12,6 +12,7 @@ import com.everneth.rp.RP;
 import com.everneth.rp.models.Guild;
 import com.everneth.rp.models.GuildResponse;
 import com.everneth.rp.models.Invite;
+import com.everneth.rp.utils.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -57,23 +58,8 @@ public class GuildCommand extends BaseCommand {
     @Subcommand("leave")
     public void onGuildLeave(CommandSender sender)
     {
-        if(isGuilded(getPlayerRow((Player) sender))) {
-            DbRow member = getGuildMember((Player) sender);
-            try {
-                DB.executeUpdate(
-                        "DELETE FROM guild_members WHERE player_id = ?",
-                        member.getInt("player_id")
-                );
-                sender.sendMessage("You have left the guild!");
-            } catch (SQLException e) {
-                RP.getPlugin().getLogger().info(e.getMessage());
-                sender.sendMessage("ERROR: Could not leave guild, contact a GM.");
-            }
-        }
-        else
-        {
-            sender.sendMessage("Must be in a guild before you can leave it, ya turkey baster.");
-        }
+        Player player = (Player) sender;
+        GuildResponse response = Guild.leaveGuild(player.getUniqueId());
     }
 
     @Subcommand("invite")
@@ -176,8 +162,7 @@ public class GuildCommand extends BaseCommand {
         return player;
     }
 
-    private boolean addToGuild(int guildId, int playerId)
-    {
+    private boolean addToGuild(int guildId, int playerId) {
         try {
             DB.executeInsert(
                     "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
@@ -186,85 +171,8 @@ public class GuildCommand extends BaseCommand {
                     3
             );
             return true;
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             RP.getPlugin().getLogger().info(e.getMessage());
-            return false;
-        }
-    }
-
-    private void createGuild(String name, Player p1)
-    {
-        DB.createTransactionAsync(stm -> createGuild(name, p1, stm));
-    }
-
-    private boolean createGuild(String name, Player p1, DbStatement stm)
-    {
-        try {
-            stm.startTransaction();
-            // setup for queries
-            CompletableFuture<DbRow> futurePlayer;
-            DbRow result = new DbRow();
-            // Let's select the player we need
-            futurePlayer = DB.getFirstRowAsync(
-                    "SELECT * FROM players WHERE player_uuid = ?",
-                    p1.getUniqueId().toString()
-            );
-            // Extract it from the future and put it into a row object we can access
-            try {
-                result = futurePlayer.get();
-            } catch (Exception e) {
-                RP.getPlugin().getLogger().info(e.getMessage());
-            }
-            // Is this player already in a guild?
-            if(isGuilded(result))
-            {
-                // Yes, we're done here. Notify the player that their a dumbass and leave their current guild.
-                p1.sendMessage("You're already in a guild ya jackwang");
-                stm.rollback();
-                return false;
-            }
-            else
-            {
-                long guildId = 0;
-                // First, we need to insert the new guild so we can have the ID
-                // Insert returns the primary key (guild_id)
-                 guildId = DB.executeInsert(
-                        "INSERT INTO guilds (guild_name, leader_id) VALUES (?,?)",
-                        name,
-                        result.getInt("player_id")
-                );
-
-                // if we have an Id, it shouldn't be 0
-                if(guildId != 0)
-                {
-                    // Insert the new guild leader as a member, leader ID is 3
-                    DB.executeInsert(
-                            "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
-                            guildId,
-                            result.getInt("player_id"),
-                            3
-                    );
-                    // return true so the transaction can commit
-                    stm.commit();
-                    return true;
-                }
-                else
-                {
-                    // If guildId is 0, the query failed. Lets notify the player
-                    // return false so the transaction can rollback
-                    stm.rollback();
-                    p1.sendMessage("An error ocurred during guild creation. " +
-                            "Please notify Comms and follow up with your guild request with a GM");
-                    return false;
-                }
-            }
-        }
-        catch (SQLException e)
-        {
-            RP.getPlugin().getLogger().info(e.getMessage());
-            // if for whatever reason this entire thing fails, return false for safety.
             return false;
         }
     }

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class Guild {
@@ -43,11 +44,11 @@ public class Guild {
     public GuildResponse createGuild()
     {
         GuildResponse response = checksPass(this);
-
+        long guild_id = 0;
         if(response.isSuccessfulAction())
         {
             try {
-                DB.executeInsert(
+                guild_id = DB.executeInsert(
                         "INSERT INTO guilds (guild_name, guild_leader_id, guild_score, guild_primary_color," +
                                 " guild_secondary_color, guild_banner_path, guild_is_rp, guild_created_date, guild_tier) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -61,6 +62,10 @@ public class Guild {
                         this.getCreatedDate(),
                         this.getTier()
                 );
+                DB.executeInsert("INSERT INTO guild_members (guild_id, player_id, rank) VALUES (?, ?, ?)",
+                        guild_id,
+                        this.getLeaderId(),
+                        1);
                 response.setSuccessfulAction(true);
                 response.setMessage("Guild creation successful!");
             } catch (SQLException e) {
@@ -72,12 +77,33 @@ public class Guild {
         return response;
     }
 
+    public static GuildResponse leaveGuild(UUID playerUuid) {
+        DbRow result = new DbRow();
+        GuildResponse response = new GuildResponse();
+        try {
+            result = DB.getFirstRowAsync("SELECT p.player_id, gm.guild_id FROM players p INNER JOIN guild_members gm ON players.player_id = gm.player_id WHERE player_uuid = ?", playerUuid.toString()).get();
+        } catch (Exception e) {
+            response.setMessage("Could not leave guild. There is no guild to leave.");
+            response.setSuccessfulAction(false);
+        }
+        try {
+            DB.executeUpdate("DELETE FROM guild_members WHERE player_id = ?",
+                    result.getInt("player_id"));
+            response.setMessage("Successfully left guild.");
+            response.setSuccessfulAction(true);
+        } catch (SQLException e) {
+            response.setMessage("Error while removing player from guild. Please contact staff.");
+            response.setSuccessfulAction(false);
+        }
+        return response;
+    }
+
     private GuildResponse checksPass(Guild guild)
     {
         if(guild.getLeaderId() == 0)
             return new GuildResponse("Invalid player name. Are you sure the name is spelled correctly?", false);
         // If we made it this far, let's check and see if this player is guilded
-        if(guild.isGuilded(guild.getLeaderId()))
+        if(isGuilded(guild.getLeaderId()))
             return new GuildResponse("This player is still guilded... please have them /gquit and try again.", false);
         // Valid player, not guilded... lets check and see if there is a guild by the name we want
         if(guild.guildExists(guild.getName()))
@@ -168,7 +194,7 @@ public class Guild {
             return result.getInt("guild_leader_id");
     }
 
-    private boolean isGuilded(int playerId)
+    public static boolean isGuilded(int playerId)
     {
         CompletableFuture<DbRow> futureRow;
         DbRow row = new DbRow();
@@ -186,7 +212,24 @@ public class Guild {
         }
         return row.isEmpty();
     }
-
+    public static boolean isGuilded(String playerName)
+    {
+        CompletableFuture<DbRow> futureRow;
+        DbRow row = new DbRow();
+        futureRow = DB.getFirstRowAsync(
+                "SELECT * FROM guild_members INNER JOIN WHERE player_id = ?",
+                playerName
+        );
+        try
+        {
+            row = futureRow.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return row.isEmpty();
+    }
     private boolean guildExists(String name)
     {
         CompletableFuture<DbRow> futureRow;
