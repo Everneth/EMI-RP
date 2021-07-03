@@ -6,19 +6,23 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
-import co.aikar.idb.DbStatement;
 import com.everneth.rp.InviteManager;
 import com.everneth.rp.RP;
+import com.everneth.rp.models.EMIPlayer;
 import com.everneth.rp.models.Guild;
 import com.everneth.rp.models.GuildResponse;
 import com.everneth.rp.models.Invite;
 import com.everneth.rp.utils.PlayerUtils;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.track.TrackManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
+
+import static com.everneth.rp.RP.getPermsApi;
 
 @CommandAlias("guild")
 public class GuildCommand extends BaseCommand {
@@ -60,14 +64,24 @@ public class GuildCommand extends BaseCommand {
     {
         Player player = (Player) sender;
         GuildResponse response = Guild.leaveGuild(player.getUniqueId());
+        sender.sendMessage(response.getMessage());
     }
 
     @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
-    public void onGuildInvite(CommandSender sender, Player player)
+    public void onGuildInvite(CommandSender sender, Player invitee)
     {
-        DbRow invitee = getPlayerRow(player);
-        DbRow officer = getGuildMember((Player) sender);
+        //3. Validate permissions here, validate input in model
+
+        // Gather required information to send to the model
+        Player officer = (Player) sender;
+        //EMIPlayer invitee = PlayerUtils.getEMIPlayer(target.getUniqueId());
+        //EMIPlayer officer = PlayerUtils.getEMIPlayer(source.getUniqueId());
+
+        // Send this data to the model, let the model figure things out.
+        GuildResponse response = Guild.inviteToGuild(invitee, officer);
+
+        /*
         if(isGuilded(invitee))
         {
            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. They must leave their current guild first.");
@@ -82,6 +96,8 @@ public class GuildCommand extends BaseCommand {
             InviteManager.getInviteManager().addInvite(player, guildInvite);
             guildInvite.send();
         }
+
+         */
     }
     @Subcommand("remove")
     @CommandPermission("emi.rp.guild.officer")

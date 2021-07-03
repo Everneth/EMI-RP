@@ -4,7 +4,12 @@ public class EMIPlayer {
     private String uuid;
     private String name;
     private int id;
-
+    public EMIPlayer()
+    {
+        this.uuid = "";
+        this.name = "";
+        this.id = 0;
+    }
     public EMIPlayer(String uuid, String name)
     {
         this.uuid = uuid;

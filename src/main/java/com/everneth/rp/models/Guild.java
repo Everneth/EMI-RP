@@ -98,6 +98,14 @@ public class Guild {
         return response;
     }
 
+    public static GuildResponse inviteToGuild(Player invitedPlayer, Player guildOfficer)
+    {
+        //Invite guildInvite = Invite()
+        //Guild guild = this.loadGuild();
+        //    public Invite(int guildId, int playerId, Player player, Player officer)
+        return new GuildResponse();
+    }
+
     private GuildResponse checksPass(Guild guild)
     {
         if(guild.getLeaderId() == 0)
@@ -247,5 +255,10 @@ public class Guild {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return row.isEmpty();
+    }
+
+    private Guild loadGuild(Player player)
+    {
+        return new Guild();
     }
 }

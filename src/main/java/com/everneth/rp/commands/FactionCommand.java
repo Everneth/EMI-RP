@@ -4,11 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
-import co.aikar.idb.DbRow;
-import com.everneth.rp.models.Faction;
-import com.everneth.rp.utils.PlayerUtils;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 @CommandAlias("faction")
 public class FactionCommand extends BaseCommand {
