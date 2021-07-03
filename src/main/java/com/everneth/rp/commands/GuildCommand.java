@@ -38,18 +38,18 @@ public class GuildCommand extends BaseCommand {
     @Subcommand("accept")
     public void onGuildAccept(CommandSender sender)
     {
-        boolean hasAdded = false;
+        GuildResponse response = new GuildResponse();
         Player player = (Player) sender;
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
-
-        hasAdded = addToGuild(guildInvite.getGuildId(), guildInvite.getPlayerId());
-        if(hasAdded)
+        
+        response = guildInvite.getGuild().joinGuild(guildInvite.getGuild().getGuildId(), guildInvite.getPlayerId());
+        if(response.isSuccessfulAction())
         {
             guildInvite.accept();
         }
         else
         {
-            sender.sendMessage(ChatColor.RED + "ERROR: Could not add to guild. Contact Comms.");
+            sender.sendMessage(response.getMessage());
         }
     }
     @Subcommand("decline")
@@ -175,21 +175,6 @@ public class GuildCommand extends BaseCommand {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return player;
-    }
-
-    private boolean addToGuild(int guildId, int playerId) {
-        try {
-            DB.executeInsert(
-                    "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
-                    guildId,
-                    playerId,
-                    3
-            );
-            return true;
-        } catch (SQLException e) {
-            RP.getPlugin().getLogger().info(e.getMessage());
-            return false;
-        }
     }
 
     private boolean isGuilded(DbRow playerRow)

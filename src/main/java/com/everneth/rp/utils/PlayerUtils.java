@@ -109,4 +109,9 @@ public class PlayerUtils {
         DbRow playerRow = PlayerUtils.getPlayerRow(uuid);
         return new EMIPlayer(playerRow.getString("player_uuid"), playerRow.getString("player_name"), playerRow.getInt("player_id"));
     }
+    public static EMIPlayer getEMIPlayer(int id)
+    {
+        DbRow playerRow = PlayerUtils.getPlayerRow(id);
+        return new EMIPlayer(playerRow.getString("player_uuid"), playerRow.getString("player_name"), playerRow.getInt("player_id"));
+    }
 }

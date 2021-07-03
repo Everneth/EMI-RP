@@ -136,6 +136,26 @@ public class Guild {
         return response;
     }
 
+    public GuildResponse joinGuild(int guildId, int playerId) {
+        GuildResponse response = new GuildResponse();
+        EMIPlayer invitedPlayer = PlayerUtils.getEMIPlayer(playerId);
+        try {
+            DB.executeInsert(
+                    "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
+                    guildId,
+                    playerId,
+                    3
+            );
+            response.setMessage(invitedPlayer.getName() + " has joined the guild!");
+            response.setSuccessfulAction(true);
+        } catch (SQLException e) {
+            RP.getPlugin().getLogger().info(e.getMessage());
+            response.setMessage("AN error occurred. Please contact a GM for assistance.");
+            response.setSuccessfulAction(false);
+        }
+        return response;
+    }
+
     private GuildResponse checksPass(Guild guild)
     {
         if(guild.getLeaderId() == 0)
