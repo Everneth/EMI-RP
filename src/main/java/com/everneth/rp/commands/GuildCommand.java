@@ -41,7 +41,7 @@ public class GuildCommand extends BaseCommand {
         GuildResponse response = new GuildResponse();
         Player player = (Player) sender;
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
-        
+
         response = guildInvite.getGuild().joinGuild(guildInvite.getGuild().getGuildId(), guildInvite.getPlayerId());
         if(response.isSuccessfulAction())
         {
@@ -71,32 +71,14 @@ public class GuildCommand extends BaseCommand {
     @CommandPermission("emi.rp.guild.officer")
     public void onGuildInvite(CommandSender sender, Player invitee)
     {
-        //3. Validate permissions here, validate input in model
-
         // Gather required information to send to the model
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
 
         // Send this data to the guild model, let the model figure things out.
         GuildResponse response = guild.inviteToGuild(invitee, officer, guild);
-
-        /*
-        if(isGuilded(invitee))
-        {
-           sender.sendMessage("Cannot invite " + player.getName() + " to the guild. They must leave their current guild first.");
-        }
-        else if(officer.getInt("rank_id") <= 1)
-        {
-            sender.sendMessage("Cannot invite " + player.getName() + " to the guild. You aren't an officer you jackwang...");
-        }
-        else if(!isGuilded(invitee) && officer.getInt("rank_id") > 1)
-        {
-            Invite guildInvite = new Invite(officer.getInt("guild_id"), invitee.getInt("player_id"), player, (Player) sender);
-            InviteManager.getInviteManager().addInvite(player, guildInvite);
-            guildInvite.send();
-        }
-
-         */
+        
+        officer.sendMessage(response.getMessage());
     }
     @Subcommand("remove")
     @CommandPermission("emi.rp.guild.officer")

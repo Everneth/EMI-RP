@@ -122,15 +122,23 @@ public class Guild {
             if(ep.getUniqueId().equals(invitedPlayer.getUniqueId().toString()))
                 invitedPlayerId = ep.getId();
         Invite guildInvite = new Invite(guild, invitedPlayerId, invitedPlayer, guildOfficer);
-        if(invitedPlayerId != 0)
+        if(!isGuilded(invitedPlayerId))
         {
-            guildInvite.send();
-            response.setMessage(invitedPlayer.getName() + " has been invited to your guild.");
-            response.setSuccessfulAction(true);
+            if(invitedPlayerId != 0)
+            {
+                guildInvite.send();
+                response.setMessage(invitedPlayer.getName() + " has been invited to your guild.");
+                response.setSuccessfulAction(true);
+            }
+            else
+            {
+                response.setMessage("An error occurred while sending your invite. Is the player online?");
+                response.setSuccessfulAction(false);
+            }
         }
         else
         {
-            response.setMessage("An error occurred while sending your invite. Is the player online?");
+            response.setMessage("This player is already in a guild!");
             response.setSuccessfulAction(false);
         }
         return response;
@@ -278,24 +286,7 @@ public class Guild {
         }
         return row.isEmpty();
     }
-    public static boolean isGuilded(String playerName)
-    {
-        CompletableFuture<DbRow> futureRow;
-        DbRow row = new DbRow();
-        futureRow = DB.getFirstRowAsync(
-                "SELECT * FROM guild_members INNER JOIN WHERE player_id = ?",
-                playerName
-        );
-        try
-        {
-            row = futureRow.get();
-        }
-        catch (Exception e)
-        {
-            RP.getPlugin().getLogger().info(e.getMessage());
-        }
-        return row.isEmpty();
-    }
+
     private boolean guildExists(String name)
     {
         CompletableFuture<DbRow> futureRow;
