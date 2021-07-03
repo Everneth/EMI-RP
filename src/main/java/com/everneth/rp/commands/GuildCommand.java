@@ -75,11 +75,10 @@ public class GuildCommand extends BaseCommand {
 
         // Gather required information to send to the model
         Player officer = (Player) sender;
-        //EMIPlayer invitee = PlayerUtils.getEMIPlayer(target.getUniqueId());
-        //EMIPlayer officer = PlayerUtils.getEMIPlayer(source.getUniqueId());
+        Guild guild = Guild.getGuildByOfficer(officer);
 
-        // Send this data to the model, let the model figure things out.
-        GuildResponse response = Guild.inviteToGuild(invitee, officer);
+        // Send this data to the guild model, let the model figure things out.
+        GuildResponse response = guild.inviteToGuild(invitee, officer, guild);
 
         /*
         if(isGuilded(invitee))

@@ -41,6 +41,21 @@ public class Guild {
         this.tier = 1;
     }
 
+    public Guild(String name, int guildLeaderId, int score, String primaryColor, String secondaryColor, String createdDate, int tier)    {
+        Date now = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        this.name = name;
+        this.leaderId = guildLeaderId;
+        this.score = score;
+        this.primaryColor = primaryColor;
+        this.secondaryColor = secondaryColor;
+        this.bannerPath = null;
+        this.isRp = false;
+        this.createdDate = format.format(now);
+        this.tier = tier;
+    }
+
     public GuildResponse createGuild()
     {
         GuildResponse response = checksPass(this);
@@ -98,10 +113,11 @@ public class Guild {
         return response;
     }
 
-    public static GuildResponse inviteToGuild(Player invitedPlayer, Player guildOfficer)
+    public GuildResponse inviteToGuild(Player invitedPlayer, Player guildOfficer, Guild guild)
     {
+
         //Invite guildInvite = Invite()
-        //Guild guild = this.loadGuild();
+
         //    public Invite(int guildId, int playerId, Player player, Player officer)
         return new GuildResponse();
     }
@@ -257,8 +273,36 @@ public class Guild {
         return row.isEmpty();
     }
 
-    private Guild loadGuild(Player player)
+    public static Guild getGuildByOfficer(Player player)
     {
-        return new Guild();
+        EMIPlayer officer = new EMIPlayer();
+        for(EMIPlayer p : RP.getOnlinePlayers())
+            if(p.getUniqueId().equals(player.getUniqueId().toString()))
+                officer = p;
+        CompletableFuture<DbRow> futureRow;
+        DbRow row = new DbRow();
+        futureRow = DB.getFirstRowAsync(
+                "SELECT * FROM guilds g JOIN guild_members gm ON" +
+                        "guilds.guild_id = guild_members.guild_id WHERE " +
+                        "gm.guild_member_id = ?",
+                officer.getId()
+        );
+        try
+        {
+            row = futureRow.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return new Guild(
+                row.getString("guild_name"),
+                row.getInt("guild_leader_id"),
+                row.getInt("guild_score"),
+                row.getString("guild_primary_color"),
+                row.getString("guild_secondary_color"),
+                row.getString("guild_created_date"),
+                row.getInt("guild_tier")
+        );
     }
 }

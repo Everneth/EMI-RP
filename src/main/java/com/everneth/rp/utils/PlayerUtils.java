@@ -4,6 +4,8 @@ import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import com.everneth.rp.RP;
 import com.everneth.rp.models.EMIPlayer;
+import com.everneth.rp.models.Guild;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayerUtils {
+    /*
+     * PLAYER RECORD METHODS
+     */
     public static DbRow getPlayerRow(String playerName)
     {
         CompletableFuture<DbRow> futurePlayer;
@@ -88,6 +93,10 @@ public class PlayerUtils {
         else
             return true;
     }
+
+    /*
+     * EMI PLAYER METHODS
+     */
 
     public static EMIPlayer getEMIPlayer(String name)
     {
