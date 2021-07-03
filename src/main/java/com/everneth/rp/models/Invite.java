@@ -10,7 +10,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class Invite {
-    private int guildId;
+    private Guild guild;
     private int playerId;
     private Timer timer;
     private Player player;
@@ -19,9 +19,9 @@ public class Invite {
     private TextComponent decline;
     private TimerTask onTimeout;
 
-    public Invite(int guildId, int playerId, Player player, Player officer)
+    public Invite(Guild guild, int playerId, Player player, Player officer)
     {
-        this.guildId = guildId;
+        this.guild = guild;
         this.playerId = playerId;
         this.player = player;
         this.officer = officer;
@@ -44,7 +44,7 @@ public class Invite {
     }
     public void send()
     {
-        player.sendMessage("You have been invited to join " + guildId + " by " + playerId);
+        player.sendMessage("You have been invited to join <" + this.guild.getName() + "> by " + this.player.getName());
         player.sendMessage( accept.getText() + " | " + decline.getText());
         this.timer.schedule(this.onTimeout, 600000L);
     }
@@ -61,8 +61,8 @@ public class Invite {
         timer.cancel();
     }
 
-    public int getGuildId() {
-        return guildId;
+    public Guild getGuild() {
+        return guild;
     }
 
     public int getPlayerId() {

@@ -13,6 +13,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class Guild {
+
+    private int guildId;
     private String name;
     private int leaderId;
     private int score;
@@ -25,6 +27,7 @@ public class Guild {
 
     public Guild(){}
 
+    // guild creation constructor
     public Guild(String name, String guildLeaderName, String primaryColor, String secondaryColor, boolean isRp)
     {
         Date now = new Date();
@@ -41,18 +44,16 @@ public class Guild {
         this.tier = 1;
     }
 
-    public Guild(String name, int guildLeaderId, int score, String primaryColor, String secondaryColor, String createdDate, int tier)    {
-        Date now = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    // guild get constructor
+    public Guild(int guildId, String name, int guildLeaderId, int score, String primaryColor, String secondaryColor, String createdDate, int tier)    {
 
+        this.guildId = guildId;
         this.name = name;
         this.leaderId = guildLeaderId;
         this.score = score;
         this.primaryColor = primaryColor;
         this.secondaryColor = secondaryColor;
-        this.bannerPath = null;
-        this.isRp = false;
-        this.createdDate = format.format(now);
+        this.createdDate = createdDate;
         this.tier = tier;
     }
 
@@ -115,11 +116,24 @@ public class Guild {
 
     public GuildResponse inviteToGuild(Player invitedPlayer, Player guildOfficer, Guild guild)
     {
-
-        //Invite guildInvite = Invite()
-
-        //    public Invite(int guildId, int playerId, Player player, Player officer)
-        return new GuildResponse();
+        GuildResponse response = new GuildResponse();
+        int invitedPlayerId = 0;
+        for(EMIPlayer ep : RP.getOnlinePlayers())
+            if(ep.getUniqueId().equals(invitedPlayer.getUniqueId().toString()))
+                invitedPlayerId = ep.getId();
+        Invite guildInvite = new Invite(guild, invitedPlayerId, invitedPlayer, guildOfficer);
+        if(invitedPlayerId != 0)
+        {
+            guildInvite.send();
+            response.setMessage(invitedPlayer.getName() + " has been invited to your guild.");
+            response.setSuccessfulAction(true);
+        }
+        else
+        {
+            response.setMessage("An error occurred while sending your invite. Is the player online?");
+            response.setSuccessfulAction(false);
+        }
+        return response;
     }
 
     private GuildResponse checksPass(Guild guild)
@@ -217,6 +231,14 @@ public class Guild {
         else
             return result.getInt("guild_leader_id");
     }
+    public int getGuildId()
+    {
+        return this.guildId;
+    }
+    public void setGuildId(int guildId)
+    {
+        this.guildId = guildId;
+    }
 
     public static boolean isGuilded(int playerId)
     {
@@ -296,6 +318,7 @@ public class Guild {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return new Guild(
+                row.getInt("guild_id"),
                 row.getString("guild_name"),
                 row.getInt("guild_leader_id"),
                 row.getInt("guild_score"),
