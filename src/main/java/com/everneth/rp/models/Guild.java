@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -171,6 +170,44 @@ public class Guild {
             response.setMessage("This player is already in a guild!");
             response.setSuccessfulAction(false);
         }
+        return response;
+    }
+
+    public GuildResponse demoteMember(Player playerToDemote)
+    {
+        GuildResponse response = new GuildResponse();
+        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToDemote.getUniqueId());
+        // To get this far, the sender must be an officer. Do the guilds match?
+        GuildMember playerGuildInfo = this.getGuildMember(playerToDemote);
+
+        if(playerGuildInfo.getGuildId() == this.guildId) {
+            // call LP to do the thing
+        }
+        else
+        {
+            response.setSuccessfulAction(false);
+            response.setMessage("This player is not a part of your guild!");
+        }
+
+        return response;
+    }
+
+    public GuildResponse promoteMember(Player playerToPromote)
+    {
+        GuildResponse response = new GuildResponse();
+        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToPromote.getUniqueId());
+        // To get this far, the sender must be an officer. Do the guilds match?
+        GuildMember playerGuildInfo = this.getGuildMember(playerToPromote);
+
+        if(playerGuildInfo.getGuildId() == this.guildId) {
+            // call LP to do the thing
+        }
+        else
+        {
+            response.setSuccessfulAction(false);
+            response.setMessage("This player is not a part of your guild!");
+        }
+
         return response;
     }
 

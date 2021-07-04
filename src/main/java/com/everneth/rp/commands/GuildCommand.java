@@ -27,7 +27,7 @@ import static com.everneth.rp.RP.getPermsApi;
 @CommandAlias("guild")
 public class GuildCommand extends BaseCommand {
     @Subcommand("create")
-    @CommandPermission("emi.rp.guild")
+    @CommandPermission("emi.rp.gm")
     public void onGuildPlayerCreate(CommandSender sender, String playerName, String guildName, String primColor, String secColor, boolean isRp)
     {
         Guild guild = new Guild(guildName, playerName, primColor, secColor, isRp);
@@ -90,5 +90,22 @@ public class GuildCommand extends BaseCommand {
 
         response = guild.kickFromGuild(playerToKick);
         sender.sendMessage(response.getMessage());
+    }
+    @Subcommand("promote")
+    @CommandPermission("emi.rp.guild.gm")
+    public void onGuildPromote(CommandSender sender, Player playerToPromote)
+    {
+        Player officer = (Player) sender;
+        Guild guild = Guild.getGuildByOfficer(officer);
+        GuildResponse response = guild.promoteMember(playerToPromote);
+    }
+
+    @Subcommand("demote")
+    @CommandPermission("emi.rp.guild.gm")
+    public void onGuildDemote(CommandSender sender, Player playerToDemote)
+    {
+        Player officer = (Player) sender;
+        Guild guild = Guild.getGuildByOfficer(officer);
+        GuildResponse response = guild.demoteMember(playerToDemote);
     }
 }
