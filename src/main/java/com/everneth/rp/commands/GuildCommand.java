@@ -80,67 +80,15 @@ public class GuildCommand extends BaseCommand {
 
         officer.sendMessage(response.getMessage());
     }
-    @Subcommand("remove")
+    @Subcommand("kick")
     @CommandPermission("emi.rp.guild.officer")
-    public void onGuildRemove(CommandSender sender, Player player)
+    public void onGuildKick(CommandSender sender, Player playerToKick)
     {
-        // Get officer record and member record
-        DbRow officer = getGuildMember((Player) sender);
-        DbRow member = getGuildMember(player);
-        // Is the officer actually an officer?
-        if(officer.getInt("rank_id") > 1) {
-            // Yes, are we removing a player that belongs to the officers guild?
-            if(officer.getInt("guild_id").equals(member.getInt("guild_id"))) {
-                // Yes, run the query
-                try {
-                    DB.executeUpdate(
-                            "DELETE FROM guild_members WHERE player_id = ?",
-                            member.getInt("player_id")
-                    );
-                } catch (SQLException e) {
-                    RP.getPlugin().getLogger().info(e.getMessage());
-                }
-            }
-            else
-            {
-                // No, silly goose!
-                sender.sendMessage(player.getName() + " is not a member of your guild! >_>");
-            }
-        }
-        else
-        {
-            // We're not even an officer. Why is this happening?!
-            sender.sendMessage("T_T This is for officers only.");
-        }
-    }
-    /***
-     * Helper/class methods below for cleanliness.
-     * Keep commands at the top.
-     *
-     *  NO GUILD = 0
-     *  GUILD MEMBER = 1
-     *  GUILD OFFICER = 2
-     *  GUILD LEADER = 3
-     *
-     */
+        Player officer = (Player) sender;
+        Guild guild = Guild.getGuildByOfficer(officer);
+        GuildResponse response = new GuildResponse();
 
-    private DbRow getGuildMember(Player p)
-    {
-        CompletableFuture<DbRow> futurePlayer;
-        DbRow member = new DbRow();
-        futurePlayer = DB.getFirstRowAsync(
-                "SELECT player_id, guild_id, rank_id FROM players p " +
-                        "INNER JOIN guild_members gm ON p.player_id = gm.player_id " +
-                        "WHERE player_uuid = ?",
-                p.getUniqueId().toString()
-        );
-        try {
-            member = futurePlayer.get();
-        }
-        catch (Exception e)
-        {
-            RP.getPlugin().getLogger().info(e.getMessage());
-        }
-        return member;
+        response = guild.kickFromGuild(playerToKick);
+        sender.sendMessage(response.getMessage());
     }
 }

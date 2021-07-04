@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -89,6 +90,35 @@ public class Guild {
                 response.setMessage("Guild creation failed. Please check logs as this may be a SQL error.");
                 response.setSuccessfulAction(false);
             }
+        }
+        return response;
+    }
+
+    public GuildResponse kickFromGuild(Player playerToKick)
+    {
+        GuildResponse response = new GuildResponse();
+        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToKick.getUniqueId());
+        // To get this far, the sender must be an officer. Do the guilds match?
+        GuildMember playerGuildInfo = this.getGuildMember(playerToKick);
+
+        if(playerGuildInfo.getGuildId() == this.guildId) {
+            try {
+                DB.executeUpdate(
+                        "UPDATE guild_members SET guild_id = 0 WHERE player_id = ?",
+                        ep.getId()
+                );
+                response.setMessage("Member has been removed from the guild.");
+                response.setSuccessfulAction(true);
+            } catch (SQLException e) {
+                RP.getPlugin().getLogger().info(e.getMessage());
+                response.setMessage("An error occurred during removal. Please contact a GM.");
+                response.setSuccessfulAction(false);
+            }
+        }
+        else
+        {
+            response.setMessage("This player is not a member of your guild!");
+            response.setSuccessfulAction(false);
         }
         return response;
     }
@@ -304,6 +334,26 @@ public class Guild {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return row.isEmpty();
+    }
+
+    private GuildMember getGuildMember(Player p)
+    {
+        CompletableFuture<DbRow> futurePlayer;
+        DbRow member = new DbRow();
+        futurePlayer = DB.getFirstRowAsync(
+                "SELECT player_id, guild_id, rank_id FROM players p " +
+                        "INNER JOIN guild_members gm ON p.player_id = gm.player_id " +
+                        "WHERE player_uuid = ?",
+                p.getUniqueId().toString()
+        );
+        try {
+            member = futurePlayer.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return new GuildMember(member.getInt("player_id"), member.getInt("guild_id"));
     }
 
     public static Guild getGuildByOfficer(Player player)
