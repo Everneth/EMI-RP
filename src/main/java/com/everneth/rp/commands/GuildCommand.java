@@ -77,7 +77,7 @@ public class GuildCommand extends BaseCommand {
 
         // Send this data to the guild model, let the model figure things out.
         GuildResponse response = guild.inviteToGuild(invitee, officer, guild);
-        
+
         officer.sendMessage(response.getMessage());
     }
     @Subcommand("remove")
@@ -142,39 +142,5 @@ public class GuildCommand extends BaseCommand {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return member;
-    }
-
-    private DbRow getPlayerRow(Player p)
-    {
-        CompletableFuture<DbRow> futurePlayer;
-        DbRow player = new DbRow();
-        futurePlayer = DB.getFirstRowAsync("SELECT * FROM players WHERE player_uuid = ?", p.getUniqueId().toString());
-        try {
-            player = futurePlayer.get();
-        }
-        catch (Exception e)
-        {
-            RP.getPlugin().getLogger().info(e.getMessage());
-        }
-        return player;
-    }
-
-    private boolean isGuilded(DbRow playerRow)
-    {
-        CompletableFuture<DbRow> futureRow;
-        DbRow row = new DbRow();
-        futureRow = DB.getFirstRowAsync(
-                "SELECT * FROM guild_members WHERE player_id = ?",
-                playerRow.getInt("player_id")
-        );
-        try
-        {
-            row = futureRow.get();
-        }
-        catch (Exception e)
-        {
-            RP.getPlugin().getLogger().info(e.getMessage());
-        }
-        return row.isEmpty();
     }
 }
