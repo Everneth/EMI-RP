@@ -98,6 +98,7 @@ public class GuildCommand extends BaseCommand {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
         GuildResponse response = guild.promoteMember(playerToPromote);
+        sender.sendMessage(response.getMessage());
     }
 
     @Subcommand("demote")
@@ -107,5 +108,6 @@ public class GuildCommand extends BaseCommand {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
         GuildResponse response = guild.demoteMember(playerToDemote);
+        sender.sendMessage(response.getMessage());
     }
 }

@@ -4,6 +4,13 @@ import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import com.everneth.rp.RP;
 import com.everneth.rp.utils.PlayerUtils;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.context.ContextManager;
+import net.luckperms.api.context.ImmutableContextSet;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.track.DemotionResult;
+import net.luckperms.api.track.PromotionResult;
+import net.luckperms.api.track.Track;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -175,6 +182,7 @@ public class Guild {
 
     public GuildResponse demoteMember(Player playerToDemote)
     {
+        LuckPerms LP = RP.getPermsApi();
         GuildResponse response = new GuildResponse();
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToDemote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
@@ -182,6 +190,21 @@ public class Guild {
 
         if(playerGuildInfo.getGuildId() == this.guildId) {
             // call LP to do the thing
+            Track track = LP.getTrackManager().getTrack(
+                    this.getName().replaceAll("\\s", "").toLowerCase());
+            User user = LP.getUserManager().getUser(playerToDemote.getUniqueId());
+            ImmutableContextSet ctx = ImmutableContextSet.of("server", "main");
+            DemotionResult result = track.demote(user, ctx);
+            if(result.wasSuccessful())
+            {
+                response.setMessage(playerToDemote.getName() + " was demoted!");
+                response.setSuccessfulAction(true);
+            }
+            else
+            {
+                response.setMessage("Error demoting member. Please contact a GM.");
+                response.setSuccessfulAction(false);
+            }
         }
         else
         {
@@ -194,13 +217,28 @@ public class Guild {
 
     public GuildResponse promoteMember(Player playerToPromote)
     {
+        LuckPerms LP = RP.getPermsApi();
         GuildResponse response = new GuildResponse();
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToPromote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToPromote);
 
         if(playerGuildInfo.getGuildId() == this.guildId) {
-            // call LP to do the thing
+            Track track = LP.getTrackManager().getTrack(
+                    this.getName().replaceAll("\\s", "").toLowerCase());
+            User user = LP.getUserManager().getUser(playerToPromote.getUniqueId());
+            ImmutableContextSet ctx = ImmutableContextSet.of("server", "main");
+            PromotionResult result = track.promote(user, ctx);
+            if(result.wasSuccessful())
+            {
+                response.setMessage(playerToPromote.getName() + " was promoted!");
+                response.setSuccessfulAction(true);
+            }
+            else
+            {
+                response.setMessage("Error promoting member. Please contact a GM.");
+                response.setSuccessfulAction(false);
+            }
         }
         else
         {
