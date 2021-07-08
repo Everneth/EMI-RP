@@ -121,7 +121,7 @@ public class Guild {
 
         trackFuture.thenAcceptAsync(track -> {
             gmGrpFuture.thenAcceptAsync(group -> {
-                user.setPrimaryGroup(group.getName());
+                user.data().add(Node.builder(group.getName()).build());
             });
             officerGrpFuture.thenAcceptAsync(track::appendGroup);
             memberGrpFuture.thenAcceptAsync(track::appendGroup);
@@ -134,6 +134,7 @@ public class Guild {
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToKick.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToKick);
+        LuckPerms LP = RP.getPermsApi();
 
         if(playerGuildInfo.getGuildId() == this.guildId) {
             try {
@@ -141,8 +142,16 @@ public class Guild {
                         "UPDATE guild_members SET guild_id = 0 WHERE player_id = ?",
                         ep.getId()
                 );
+                Collection<Node> userNodes = LP.getUserManager().getUser(playerToKick.getUniqueId()).getNodes();
+                String group = "group." + this.getName().replaceAll("\\s", "").toLowerCase();
+                for(Node node : userNodes)
+                {
+                    if(node.getKey().equals(group))
+                        LP.getUserManager().getUser(playerToKick.getUniqueId()).data().remove(node);
+                }
                 response.setMessage("Member has been removed from the guild.");
                 response.setSuccessfulAction(true);
+
             } catch (SQLException e) {
                 RP.getPlugin().getLogger().info(e.getMessage());
                 response.setMessage("An error occurred during removal. Please contact a GM.");
