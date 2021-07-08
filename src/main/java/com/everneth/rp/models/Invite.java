@@ -46,6 +46,7 @@ public class Invite {
     {
         player.sendMessage("You have been invited to join <" + this.guild.getName() + "> by " + this.player.getName());
         player.sendMessage( accept.getText() + " | " + decline.getText());
+        InviteManager.getInviteManager().addInvite(this.player, this);
         this.timer.schedule(this.onTimeout, 600000L);
     }
     public void accept()

@@ -7,7 +7,10 @@ import com.everneth.rp.utils.PlayerUtils;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.context.ContextManager;
 import net.luckperms.api.context.ImmutableContextSet;
+import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
+import net.luckperms.api.model.user.UserManager;
+import net.luckperms.api.node.Node;
 import net.luckperms.api.track.DemotionResult;
 import net.luckperms.api.track.PromotionResult;
 import net.luckperms.api.track.Track;
@@ -15,7 +18,9 @@ import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -89,6 +94,7 @@ public class Guild {
                         guild_id,
                         this.getLeaderId(),
                         1);
+                this.buildGuildPermissions();
                 response.setSuccessfulAction(true);
                 response.setMessage("Guild creation successful!");
             } catch (SQLException e) {
@@ -98,6 +104,28 @@ public class Guild {
             }
         }
         return response;
+    }
+
+    private void buildGuildPermissions()
+    {
+        LuckPerms LP = RP.getPermsApi();
+        String trackName = this.getName().replaceAll("\\s", "").toLowerCase();
+        CompletableFuture<Track> trackFuture = LP.getTrackManager().createAndLoadTrack(trackName);
+        CompletableFuture<Group> gmGrpFuture = LP.getGroupManager().createAndLoadGroup("Guild Master");
+        CompletableFuture<Group> officerGrpFuture = LP.getGroupManager().createAndLoadGroup("Officer");
+        CompletableFuture<Group> memberGrpFuture = LP.getGroupManager().createAndLoadGroup("Member");
+
+        EMIPlayer guildLeader = PlayerUtils.getEMIPlayer(this.getLeaderId());
+
+        User user = LP.getUserManager().getUser(UUID.fromString(guildLeader.getUniqueId()));
+
+        trackFuture.thenAcceptAsync(track -> {
+            gmGrpFuture.thenAcceptAsync(group -> {
+                user.setPrimaryGroup(group.getName());
+            });
+            officerGrpFuture.thenAcceptAsync(track::appendGroup);
+            memberGrpFuture.thenAcceptAsync(track::appendGroup);
+        });
     }
 
     public GuildResponse kickFromGuild(Player playerToKick)
@@ -132,6 +160,7 @@ public class Guild {
     public static GuildResponse leaveGuild(UUID playerUuid) {
         DbRow result = new DbRow();
         GuildResponse response = new GuildResponse();
+        LuckPerms LP = RP.getPermsApi();
         try {
             result = DB.getFirstRowAsync("SELECT p.player_id, gm.guild_id FROM players p INNER JOIN guild_members gm ON players.player_id = gm.player_id WHERE player_uuid = ?", playerUuid.toString()).get();
         } catch (Exception e) {
@@ -143,6 +172,14 @@ public class Guild {
                     result.getInt("player_id"));
             response.setMessage("Successfully left guild.");
             response.setSuccessfulAction(true);
+            Collection<Node> userNodes = LP.getUserManager().getUser(playerUuid).getNodes();
+            Guild guild = Guild.getGuildByMember(playerUuid);
+            String group = "group." + guild.getName().replaceAll("\\s", "").toLowerCase();
+            for(Node node : userNodes)
+            {
+                if(node.getKey().equals(group))
+                    LP.getUserManager().getUser(playerUuid).data().remove(node);
+            }
         } catch (SQLException e) {
             response.setMessage("Error while removing player from guild. Please contact staff.");
             response.setSuccessfulAction(false);
@@ -252,6 +289,12 @@ public class Guild {
     public GuildResponse joinGuild(int guildId, int playerId) {
         GuildResponse response = new GuildResponse();
         EMIPlayer invitedPlayer = PlayerUtils.getEMIPlayer(playerId);
+        LuckPerms LP = RP.getPermsApi();
+
+        User user = LP.getUserManager().getUser(invitedPlayer.getUniqueId());
+        String group = "group." + this.getName().replaceAll("\\s", "").toLowerCase();
+        user.data().add(Node.builder(group).build());
+
         try {
             DB.executeInsert(
                     "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
@@ -429,6 +472,41 @@ public class Guild {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
         return new GuildMember(member.getInt("player_id"), member.getInt("guild_id"));
+    }
+
+    public static Guild getGuildByMember(UUID uuid)
+    {
+        EMIPlayer member = new EMIPlayer();
+        for(EMIPlayer p : RP.getOnlinePlayers())
+            if(p.getUniqueId().equals(uuid.toString()))
+                member = p;
+
+        CompletableFuture<DbRow> futureRow;
+        DbRow row = new DbRow();
+        futureRow = DB.getFirstRowAsync(
+                "SELECT * FROM guilds g JOIN guild_members gm ON" +
+                        "guilds.guild_id = guild_members.guild_id WHERE " +
+                        "gm.guild_member_id = ?",
+                member.getId()
+        );
+        try
+        {
+            row = futureRow.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+        return new Guild(
+                row.getInt("guild_id"),
+                row.getString("guild_name"),
+                row.getInt("guild_leader_id"),
+                row.getInt("guild_score"),
+                row.getString("guild_primary_color"),
+                row.getString("guild_secondary_color"),
+                row.getString("guild_created_date"),
+                row.getInt("guild_tier")
+        );
     }
 
     public static Guild getGuildByOfficer(Player player)
