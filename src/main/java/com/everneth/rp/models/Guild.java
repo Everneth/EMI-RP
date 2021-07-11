@@ -33,6 +33,8 @@ public class Guild {
     private String primaryColor;
     private String secondaryColor;
     private String bannerPath;
+    private String friendlyName;
+    private String prefix;
     private boolean isRp;
     private String createdDate;
     private int tier;
@@ -54,6 +56,8 @@ public class Guild {
         this.isRp = isRp;
         this.createdDate = format.format(now);
         this.tier = 1;
+        this.friendlyName = makeFriendlyName();
+        this.prefix = makePrefix();
     }
 
     // guild get constructor
@@ -69,6 +73,18 @@ public class Guild {
         this.tier = tier;
     }
 
+    private String makeFriendlyName()
+    {
+        return this.getName().replaceAll(" ", "-").toLowerCase();
+    }
+
+    private String makePrefix()
+    {
+        //trim the string to get rid of leading or trailing whitespace, if any
+        String trimmedString = this.getName().trim();
+        return trimmedString.substring(0, 3) + "_";
+    }
+
     public GuildResponse createGuild()
     {
         GuildResponse response = checksPass(this);
@@ -78,8 +94,9 @@ public class Guild {
             try {
                 guild_id = DB.executeInsert(
                         "INSERT INTO guilds (guild_name, guild_leader_id, guild_score, guild_primary_color," +
-                                " guild_secondary_color, guild_banner_path, guild_is_rp, guild_created_date, guild_tier) " +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                " guild_secondary_color, guild_banner_path, guild_is_rp, guild_created_date, guild_tier," +
+                                " guild_friendly name, guild_prefix) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         this.getName(),
                         this.getLeaderId(),
                         this.getScore(),
@@ -88,7 +105,9 @@ public class Guild {
                         null,
                         this.isRp(),
                         this.getCreatedDate(),
-                        this.getTier()
+                        this.getTier(),
+                        this.getFriendlyName(),
+                        this.getPrefix()
                 );
                 DB.executeInsert("INSERT INTO guild_members (guild_id, player_id, rank) VALUES (?, ?, ?)",
                         guild_id,
@@ -108,12 +127,14 @@ public class Guild {
 
     private void buildGuildPermissions()
     {
+        final String GUILD_MASTER = this.getPrefix() + "GuildMaster";
+        final String GUILD_OFFICER = this.getPrefix() + "Officer";
+        final String GUILD_MEMBER = this.getPrefix() + "Member";
         LuckPerms LP = RP.getPermsApi();
-        String trackName = this.getName().replaceAll("\\s", "").toLowerCase();
-        CompletableFuture<Track> trackFuture = LP.getTrackManager().createAndLoadTrack(trackName);
-        CompletableFuture<Group> gmGrpFuture = LP.getGroupManager().createAndLoadGroup("Guild Master");
-        CompletableFuture<Group> officerGrpFuture = LP.getGroupManager().createAndLoadGroup("Officer");
-        CompletableFuture<Group> memberGrpFuture = LP.getGroupManager().createAndLoadGroup("Member");
+        CompletableFuture<Track> trackFuture = LP.getTrackManager().createAndLoadTrack(this.getFriendlyName());
+        CompletableFuture<Group> gmGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_MASTER);
+        CompletableFuture<Group> officerGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_OFFICER);
+        CompletableFuture<Group> memberGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_MEMBER);
 
         EMIPlayer guildLeader = PlayerUtils.getEMIPlayer(this.getLeaderId());
 
@@ -143,7 +164,7 @@ public class Guild {
                         ep.getId()
                 );
                 Collection<Node> userNodes = LP.getUserManager().getUser(playerToKick.getUniqueId()).getNodes();
-                String group = "group." + this.getName().replaceAll("\\s", "").toLowerCase();
+                String group = "group." + this.getFriendlyName();
                 for(Node node : userNodes)
                 {
                     if(node.getKey().equals(group))
@@ -183,7 +204,7 @@ public class Guild {
             response.setSuccessfulAction(true);
             Collection<Node> userNodes = LP.getUserManager().getUser(playerUuid).getNodes();
             Guild guild = Guild.getGuildByMember(playerUuid);
-            String group = "group." + guild.getName().replaceAll("\\s", "").toLowerCase();
+            String group = "group." + guild.getFriendlyName();
             for(Node node : userNodes)
             {
                 if(node.getKey().equals(group))
@@ -236,11 +257,10 @@ public class Guild {
 
         if(playerGuildInfo.getGuildId() == this.guildId) {
             // call LP to do the thing
-            Track track = LP.getTrackManager().getTrack(
-                    this.getName().replaceAll("\\s", "").toLowerCase());
+            Track track = LP.getTrackManager().getTrack(this.getFriendlyName());
             User user = LP.getUserManager().getUser(playerToDemote.getUniqueId());
             ImmutableContextSet ctx = ImmutableContextSet.of("server", "main");
-            DemotionResult result = track.demote(user, ctx);
+            DemotionResult result = track.demote(user, ctx); 
             if(result.wasSuccessful())
             {
                 response.setMessage(playerToDemote.getName() + " was demoted!");
@@ -270,8 +290,7 @@ public class Guild {
         GuildMember playerGuildInfo = this.getGuildMember(playerToPromote);
 
         if(playerGuildInfo.getGuildId() == this.guildId) {
-            Track track = LP.getTrackManager().getTrack(
-                    this.getName().replaceAll("\\s", "").toLowerCase());
+            Track track = LP.getTrackManager().getTrack(this.getFriendlyName());
             User user = LP.getUserManager().getUser(playerToPromote.getUniqueId());
             ImmutableContextSet ctx = ImmutableContextSet.of("server", "main");
             PromotionResult result = track.promote(user, ctx);
@@ -301,7 +320,7 @@ public class Guild {
         LuckPerms LP = RP.getPermsApi();
 
         User user = LP.getUserManager().getUser(invitedPlayer.getUniqueId());
-        String group = "group." + this.getName().replaceAll("\\s", "").toLowerCase();
+        String group = "group." + this.getFriendlyName();
         user.data().add(Node.builder(group).build());
 
         try {
@@ -405,6 +424,22 @@ public class Guild {
 
     public void setTier(int tier) {
         this.tier = tier;
+    }
+
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 
     private int getLeaderPlayerId(String leader)
