@@ -260,7 +260,7 @@ public class Guild {
             Track track = LP.getTrackManager().getTrack(this.getFriendlyName());
             User user = LP.getUserManager().getUser(playerToDemote.getUniqueId());
             ImmutableContextSet ctx = ImmutableContextSet.of("server", "main");
-            DemotionResult result = track.demote(user, ctx); 
+            DemotionResult result = track.demote(user, ctx);
             if(result.wasSuccessful())
             {
                 response.setMessage(playerToDemote.getName() + " was demoted!");

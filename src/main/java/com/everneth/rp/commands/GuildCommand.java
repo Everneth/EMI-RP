@@ -4,28 +4,18 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
-import co.aikar.idb.DB;
-import co.aikar.idb.DbRow;
 import com.everneth.rp.InviteManager;
-import com.everneth.rp.RP;
-import com.everneth.rp.models.EMIPlayer;
 import com.everneth.rp.models.Guild;
 import com.everneth.rp.models.GuildResponse;
 import com.everneth.rp.models.Invite;
-import com.everneth.rp.utils.PlayerUtils;
-import org.bukkit.ChatColor;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.SQLException;
-import java.util.concurrent.CompletableFuture;
-
-import static com.everneth.rp.RP.getPermsApi;
-
 @CommandAlias("guild")
 public class GuildCommand extends BaseCommand {
-    @Subcommand("create")
     @CommandPermission("emi.rp.gm")
+    @Subcommand("create")
     public void onGuildPlayerCreate(CommandSender sender, String playerName, String guildName, String primColor, String secColor, boolean isRp)
     {
         Guild guild = new Guild(guildName, playerName, primColor, secColor, isRp);
@@ -65,8 +55,8 @@ public class GuildCommand extends BaseCommand {
         sender.sendMessage(response.getMessage());
     }
 
-    @Subcommand("invite")
     @CommandPermission("emi.rp.guild.officer")
+    @Subcommand("invite")
     public void onGuildInvite(CommandSender sender, Player invitee)
     {
         // Gather required information to send to the model
@@ -78,8 +68,8 @@ public class GuildCommand extends BaseCommand {
 
         officer.sendMessage(response.getMessage());
     }
-    @Subcommand("kick")
     @CommandPermission("emi.rp.guild.officer")
+    @Subcommand("kick")
     public void onGuildKick(CommandSender sender, Player playerToKick)
     {
         Player officer = (Player) sender;
@@ -89,8 +79,8 @@ public class GuildCommand extends BaseCommand {
         response = guild.kickFromGuild(playerToKick);
         sender.sendMessage(response.getMessage());
     }
-    @Subcommand("promote")
     @CommandPermission("emi.rp.guild.gm")
+    @Subcommand("promote")
     public void onGuildPromote(CommandSender sender, Player playerToPromote)
     {
         Player officer = (Player) sender;
@@ -98,9 +88,8 @@ public class GuildCommand extends BaseCommand {
         GuildResponse response = guild.promoteMember(playerToPromote);
         sender.sendMessage(response.getMessage());
     }
-
-    @Subcommand("demote")
     @CommandPermission("emi.rp.guild.gm")
+    @Subcommand("demote")
     public void onGuildDemote(CommandSender sender, Player playerToDemote)
     {
         Player officer = (Player) sender;
