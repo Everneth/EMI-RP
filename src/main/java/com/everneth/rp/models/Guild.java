@@ -491,11 +491,19 @@ public class Guild {
 
     public GuildResponse removeGuild()
     {
+        LuckPerms LP = RP.getPermsApi();
         GuildResponse response = new GuildResponse();
+        final String GUILD_MASTER = this.getPrefix() + "guildmaster";
+        final String GUILD_OFFICER = this.getPrefix() + "officer";
+        final String GUILD_MEMBER = this.getPrefix() + "member";
         //First remove all guild members from the guild
         try {
             DB.executeUpdate("DELETE FROM guild_members WHERE guild_id = ?", this.getGuildId());
             DB.executeUpdate("DELETE FROM guilds WHERE guild_id = ?", this.getGuildId());
+            LP.getGroupManager().deleteGroup(LP.getGroupManager().getGroup(GUILD_MASTER));
+            LP.getGroupManager().deleteGroup(LP.getGroupManager().getGroup(GUILD_OFFICER));
+            LP.getGroupManager().deleteGroup(LP.getGroupManager().getGroup(GUILD_MEMBER));
+            LP.getTrackManager().deleteTrack(LP.getTrackManager().getTrack(this.getFriendlyName()));
             response.setMessage("Guild removed. Any players left in the guild have also been unguilded.");
             response.setSuccessfulAction(true);
             return response;
