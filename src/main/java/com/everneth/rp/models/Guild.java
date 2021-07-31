@@ -18,6 +18,8 @@ import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -95,7 +97,7 @@ public class Guild {
                 guild_id = DB.executeInsert(
                         "INSERT INTO guilds (guild_name, guild_leader_id, guild_score, guild_primary_color," +
                                 " guild_secondary_color, guild_banner_path, guild_is_rp, guild_created_date, guild_tier," +
-                                " guild_friendly name, guild_prefix) " +
+                                " guild_friendly_name, guild_prefix) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         this.getName(),
                         this.getLeaderId(),
@@ -109,7 +111,7 @@ public class Guild {
                         this.getFriendlyName(),
                         this.getPrefix()
                 );
-                DB.executeInsert("INSERT INTO guild_members (guild_id, player_id, rank) VALUES (?, ?, ?)",
+                DB.executeInsert("INSERT INTO guild_members (guild_id, player_id, guild_rank) VALUES (?, ?, ?)",
                         guild_id,
                         this.getLeaderId(),
                         1);
@@ -127,10 +129,12 @@ public class Guild {
 
     private void buildGuildPermissions()
     {
+        // define the group names
         final String GUILD_MASTER = this.getPrefix() + "GuildMaster";
         final String GUILD_OFFICER = this.getPrefix() + "Officer";
         final String GUILD_MEMBER = this.getPrefix() + "Member";
         LuckPerms LP = RP.getPermsApi();
+        //
         CompletableFuture<Track> trackFuture = LP.getTrackManager().createAndLoadTrack(this.getFriendlyName());
         CompletableFuture<Group> gmGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_MASTER);
         CompletableFuture<Group> officerGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_OFFICER);
@@ -142,9 +146,15 @@ public class Guild {
 
         trackFuture.thenAcceptAsync(track -> {
             gmGrpFuture.thenAcceptAsync(group -> {
-                user.data().add(Node.builder(group.getName()).build());
+                user.data().add(Node.builder("group." + group.getName()).build());
+                LP.getUserManager().saveUser(user);
+                group.data().add(Node.builder("emi.rp.guild.gm").build());
+                LP.getGroupManager().saveGroup(group);
             });
-            officerGrpFuture.thenAcceptAsync(track::appendGroup);
+            officerGrpFuture.thenAcceptAsync(group -> {
+                group.data().add(Node.builder("emi.rp.guild.officer").build());
+                LP.getGroupManager().saveGroup(group);
+            });
             memberGrpFuture.thenAcceptAsync(track::appendGroup);
         });
     }
@@ -325,7 +335,7 @@ public class Guild {
 
         try {
             DB.executeInsert(
-                    "INSERT INTO guild_members (guild_id, player_id, rank_id) VALUES (?,?,?)",
+                    "INSERT INTO guild_members (guild_id, player_id, guild_rank) VALUES (?,?,?)",
                     guildId,
                     playerId,
                     3
@@ -449,7 +459,7 @@ public class Guild {
         if(result.isEmpty())
             return 0;
         else
-            return result.getInt("guild_leader_id");
+            return result.getInt("player_id");
     }
     public int getGuildId()
     {
@@ -476,7 +486,25 @@ public class Guild {
         {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
-        return row.isEmpty();
+        return row != null;
+    }
+
+    public GuildResponse removeGuild()
+    {
+        GuildResponse response = new GuildResponse();
+        //First remove all guild members from the guild
+        try {
+            DB.executeUpdate("DELETE FROM guild_members WHERE guild_id = ?", this.getGuildId());
+            DB.executeUpdate("DELETE FROM guilds WHERE guild_id = ?", this.getGuildId());
+            response.setMessage("Guild removed. Any players left in the guild have also been unguilded.");
+            response.setSuccessfulAction(true);
+            return response;
+        }
+       catch (SQLException e) {
+           response.setMessage("Error while removing the guild. Please contact staff.");
+           response.setSuccessfulAction(false);
+           return response;
+       }
     }
 
     private boolean guildExists(String name)
@@ -495,7 +523,7 @@ public class Guild {
         {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
-        return row.isEmpty();
+        return row != null;
     }
 
     private GuildMember getGuildMember(Player p)
@@ -541,6 +569,11 @@ public class Guild {
         {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime date = row.get("guild_created_date");
+        String formattedDate = date.format(formatter);
+
         return new Guild(
                 row.getInt("guild_id"),
                 row.getString("guild_name"),
@@ -548,7 +581,40 @@ public class Guild {
                 row.getInt("guild_score"),
                 row.getString("guild_primary_color"),
                 row.getString("guild_secondary_color"),
-                row.getString("guild_created_date"),
+                formattedDate,
+                row.getInt("guild_tier")
+        );
+    }
+
+    public static Guild getGuildByName(String name)
+    {
+        CompletableFuture<DbRow> futureRow;
+        DbRow row = new DbRow();
+        futureRow = DB.getFirstRowAsync(
+                "SELECT * FROM guilds WHERE guild_name = ?",
+                name
+        );
+        try
+        {
+            row = futureRow.get();
+        }
+        catch (Exception e)
+        {
+            RP.getPlugin().getLogger().info(e.getMessage());
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime date = row.get("guild_created_date");
+        String formattedDate = date.format(formatter);
+
+        return new Guild(
+                row.getInt("guild_id"),
+                row.getString("guild_name"),
+                row.getInt("guild_leader_id"),
+                row.getInt("guild_score"),
+                row.getString("guild_primary_color"),
+                row.getString("guild_secondary_color"),
+                formattedDate,
                 row.getInt("guild_tier")
         );
     }
@@ -562,7 +628,7 @@ public class Guild {
         CompletableFuture<DbRow> futureRow;
         DbRow row = new DbRow();
         futureRow = DB.getFirstRowAsync(
-                "SELECT * FROM guilds g JOIN guild_members gm ON" +
+                "SELECT * FROM guilds g JOIN guild_members gm ON " +
                         "guilds.guild_id = guild_members.guild_id WHERE " +
                         "gm.guild_member_id = ?",
                 officer.getId()
@@ -575,6 +641,11 @@ public class Guild {
         {
             RP.getPlugin().getLogger().info(e.getMessage());
         }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime date = row.get("guild_created_date");
+        String formattedDate = date.format(formatter);
+
         return new Guild(
                 row.getInt("guild_id"),
                 row.getString("guild_name"),
@@ -582,7 +653,7 @@ public class Guild {
                 row.getInt("guild_score"),
                 row.getString("guild_primary_color"),
                 row.getString("guild_secondary_color"),
-                row.getString("guild_created_date"),
+                formattedDate,
                 row.getInt("guild_tier")
         );
     }

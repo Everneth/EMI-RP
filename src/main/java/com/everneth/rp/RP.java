@@ -49,7 +49,7 @@ public class RP extends JavaPlugin {
 
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
-            LuckPerms LP = provider.getProvider();
+            LP = provider.getProvider();
         }
 
         registerCommands();

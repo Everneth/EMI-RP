@@ -97,4 +97,12 @@ public class GuildCommand extends BaseCommand {
         GuildResponse response = guild.demoteMember(playerToDemote);
         sender.sendMessage(response.getMessage());
     }
+    @CommandPermission("emi.rp.gm")
+    @Subcommand("remove")
+    public void onGuildRemove(CommandSender sender, String guildToRemove)
+    {
+        Guild guild = Guild.getGuildByName(guildToRemove);
+        GuildResponse response = guild.removeGuild();
+        sender.sendMessage(response.getMessage());
+    }
 }
