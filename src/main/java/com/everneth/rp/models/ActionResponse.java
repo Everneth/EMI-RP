@@ -1,16 +1,16 @@
 package com.everneth.rp.models;
 
-public class GuildResponse {
+public class ActionResponse {
     private String message;
     private boolean successfulAction;
 
-    public GuildResponse()
+    public ActionResponse()
     {
         this.message = "No action completed.";
         this.successfulAction = false;
     }
 
-    public GuildResponse(String message, boolean success)
+    public ActionResponse(String message, boolean success)
     {
         this.message = message;
         this.successfulAction = success;
