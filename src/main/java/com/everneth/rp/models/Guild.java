@@ -3,7 +3,6 @@ package com.everneth.rp.models;
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import com.everneth.rp.RP;
-import com.everneth.rp.utils.PlayerUtils;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.context.ImmutableContextSet;
 import net.luckperms.api.model.group.Group;
@@ -137,9 +136,9 @@ public class Guild {
         CompletableFuture<Group> officerGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_OFFICER);
         CompletableFuture<Group> memberGrpFuture = LP.getGroupManager().createAndLoadGroup(GUILD_MEMBER);
 
-        EMIPlayer guildLeader = PlayerUtils.getEMIPlayer(this.getLeaderId());
+        EMIPlayer guildLeader = EMIPlayer.getEmiPlayer(this.getLeaderId());
 
-        User user = LP.getUserManager().getUser(UUID.fromString(guildLeader.getUniqueId()));
+        User user = LP.getUserManager().getUser(guildLeader.getUuid());
 
         trackFuture.thenAcceptAsync(track -> {
             gmGrpFuture.thenAcceptAsync(group -> {
@@ -159,7 +158,7 @@ public class Guild {
     public ActionResponse kickFromGuild(Player playerToKick)
     {
         ActionResponse response = new ActionResponse();
-        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToKick.getUniqueId());
+        EMIPlayer ep = EMIPlayer.getEmiPlayer(playerToKick.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToKick);
         LuckPerms LP = RP.getPermsApi();
@@ -229,7 +228,7 @@ public class Guild {
         ActionResponse response = new ActionResponse();
         int invitedPlayerId = 0;
         for(EMIPlayer ep : RP.getOnlinePlayers())
-            if(ep.getUniqueId().equals(invitedPlayer.getUniqueId().toString()))
+            if(ep.getUuid().equals(invitedPlayer.getUniqueId()))
                 invitedPlayerId = ep.getId();
         Invite guildInvite = new Invite(guild, invitedPlayerId, invitedPlayer, guildOfficer);
         if(!isGuilded(invitedPlayerId))
@@ -258,7 +257,7 @@ public class Guild {
     {
         LuckPerms LP = RP.getPermsApi();
         ActionResponse response = new ActionResponse();
-        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToDemote.getUniqueId());
+        EMIPlayer ep = EMIPlayer.getEmiPlayer(playerToDemote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToDemote);
 
@@ -292,7 +291,7 @@ public class Guild {
     {
         LuckPerms LP = RP.getPermsApi();
         ActionResponse response = new ActionResponse();
-        EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToPromote.getUniqueId());
+        EMIPlayer ep = EMIPlayer.getEmiPlayer(playerToPromote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToPromote);
 
@@ -323,10 +322,10 @@ public class Guild {
 
     public ActionResponse joinGuild(int guildId, int playerId) {
         ActionResponse response = new ActionResponse();
-        EMIPlayer invitedPlayer = PlayerUtils.getEMIPlayer(playerId);
+        EMIPlayer invitedPlayer = EMIPlayer.getEmiPlayer(playerId);
         LuckPerms LP = RP.getPermsApi();
 
-        User user = LP.getUserManager().getUser(invitedPlayer.getUniqueId());
+        User user = LP.getUserManager().getUser(invitedPlayer.getUuid());
         String group = "group." + this.getFriendlyName();
         user.data().add(Node.builder(group).build());
 
@@ -452,11 +451,8 @@ public class Guild {
     private int getLeaderPlayerId(String leader)
     {
 
-        DbRow result = PlayerUtils.getPlayerRow(leader);
-        if(result.isEmpty())
-            return 0;
-        else
-            return result.getInt("player_id");
+       EMIPlayer player = EMIPlayer.getEmiPlayer(leader);
+        return player.getId();
     }
     public int getGuildId()
     {
@@ -555,7 +551,7 @@ public class Guild {
     {
         EMIPlayer member = new EMIPlayer();
         for(EMIPlayer p : RP.getOnlinePlayers())
-            if(p.getUniqueId().equals(uuid.toString()))
+            if(p.getUuid().equals(uuid))
                 member = p;
 
         CompletableFuture<DbRow> futureRow;
@@ -628,7 +624,7 @@ public class Guild {
     {
         EMIPlayer officer = new EMIPlayer();
         for(EMIPlayer p : RP.getOnlinePlayers())
-            if(p.getUniqueId().equals(player.getUniqueId().toString()))
+            if(p.getUuid().equals(player.getUniqueId()))
                 officer = p;
         CompletableFuture<DbRow> futureRow;
         DbRow row = new DbRow();

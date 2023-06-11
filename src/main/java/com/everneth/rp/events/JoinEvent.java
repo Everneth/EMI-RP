@@ -1,7 +1,6 @@
 package com.everneth.rp.events;
 
 import com.everneth.rp.models.EMIPlayer;
-import com.everneth.rp.utils.PlayerUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,7 +18,7 @@ public class JoinEvent implements Listener {
          * without querying the database as often.
          */
         Player player = event.getPlayer();
-        EMIPlayer playerToAdd = PlayerUtils.getEMIPlayer(player.getUniqueId());
+        EMIPlayer playerToAdd = EMIPlayer.getEmiPlayer(player.getUniqueId());
 
         RP.getOnlinePlayers().add(playerToAdd);
     }
