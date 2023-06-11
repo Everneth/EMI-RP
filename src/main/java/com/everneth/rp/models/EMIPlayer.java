@@ -120,10 +120,6 @@ public class EMIPlayer {
         return discordId != 0;
     }
 
-    public Member getGuildMember() {
-        return EMI.getGuild().getMemberById(discordId);
-    }
-
     private UUID requestUUID(String name) {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet("https://api.mojang.com/users/profiles/minecraft/" + name);
