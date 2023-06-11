@@ -5,11 +5,9 @@ import co.aikar.idb.DbRow;
 import com.everneth.rp.RP;
 import com.everneth.rp.utils.PlayerUtils;
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.context.ContextManager;
 import net.luckperms.api.context.ImmutableContextSet;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
-import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.track.DemotionResult;
 import net.luckperms.api.track.PromotionResult;
@@ -22,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -87,9 +84,9 @@ public class Guild {
         return trimmedString.substring(0, 3) + "_";
     }
 
-    public GuildResponse createGuild()
+    public ActionResponse createGuild()
     {
-        GuildResponse response = checksPass(this);
+        ActionResponse response = checksPass(this);
         long guild_id = 0;
         if(response.isSuccessfulAction())
         {
@@ -159,9 +156,9 @@ public class Guild {
         });
     }
 
-    public GuildResponse kickFromGuild(Player playerToKick)
+    public ActionResponse kickFromGuild(Player playerToKick)
     {
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToKick.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToKick);
@@ -197,9 +194,9 @@ public class Guild {
         return response;
     }
 
-    public static GuildResponse leaveGuild(UUID playerUuid) {
+    public static ActionResponse leaveGuild(UUID playerUuid) {
         DbRow result = new DbRow();
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         LuckPerms LP = RP.getPermsApi();
         try {
             result = DB.getFirstRowAsync("SELECT p.player_id, gm.guild_id FROM players p INNER JOIN guild_members gm ON players.player_id = gm.player_id WHERE player_uuid = ?", playerUuid.toString()).get();
@@ -227,9 +224,9 @@ public class Guild {
         return response;
     }
 
-    public GuildResponse inviteToGuild(Player invitedPlayer, Player guildOfficer, Guild guild)
+    public ActionResponse inviteToGuild(Player invitedPlayer, Player guildOfficer, Guild guild)
     {
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         int invitedPlayerId = 0;
         for(EMIPlayer ep : RP.getOnlinePlayers())
             if(ep.getUniqueId().equals(invitedPlayer.getUniqueId().toString()))
@@ -257,10 +254,10 @@ public class Guild {
         return response;
     }
 
-    public GuildResponse demoteMember(Player playerToDemote)
+    public ActionResponse demoteMember(Player playerToDemote)
     {
         LuckPerms LP = RP.getPermsApi();
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToDemote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToDemote);
@@ -291,10 +288,10 @@ public class Guild {
         return response;
     }
 
-    public GuildResponse promoteMember(Player playerToPromote)
+    public ActionResponse promoteMember(Player playerToPromote)
     {
         LuckPerms LP = RP.getPermsApi();
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         EMIPlayer ep = PlayerUtils.getEMIPlayer(playerToPromote.getUniqueId());
         // To get this far, the sender must be an officer. Do the guilds match?
         GuildMember playerGuildInfo = this.getGuildMember(playerToPromote);
@@ -324,8 +321,8 @@ public class Guild {
         return response;
     }
 
-    public GuildResponse joinGuild(int guildId, int playerId) {
-        GuildResponse response = new GuildResponse();
+    public ActionResponse joinGuild(int guildId, int playerId) {
+        ActionResponse response = new ActionResponse();
         EMIPlayer invitedPlayer = PlayerUtils.getEMIPlayer(playerId);
         LuckPerms LP = RP.getPermsApi();
 
@@ -350,18 +347,18 @@ public class Guild {
         return response;
     }
 
-    private GuildResponse checksPass(Guild guild)
+    private ActionResponse checksPass(Guild guild)
     {
         if(guild.getLeaderId() == 0)
-            return new GuildResponse("Invalid player name. Are you sure the name is spelled correctly?", false);
+            return new ActionResponse("Invalid player name. Are you sure the name is spelled correctly?", false);
         // If we made it this far, let's check and see if this player is guilded
         if(isGuilded(guild.getLeaderId()))
-            return new GuildResponse("This player is still guilded... please have them /gquit and try again.", false);
+            return new ActionResponse("This player is still guilded... please have them /gquit and try again.", false);
         // Valid player, not guilded... lets check and see if there is a guild by the name we want
         if(guild.guildExists(guild.getName()))
-            return new GuildResponse("A guild already exists by this name.", false);
+            return new ActionResponse("A guild already exists by this name.", false);
         // We've passed all checks
-        return new GuildResponse("Guild creation checks passed. If this message is returned, an error occurred during creation.", true);
+        return new ActionResponse("Guild creation checks passed. If this message is returned, an error occurred during creation.", true);
     }
 
     public String getName() {
@@ -489,10 +486,10 @@ public class Guild {
         return row != null;
     }
 
-    public GuildResponse removeGuild()
+    public ActionResponse removeGuild()
     {
         LuckPerms LP = RP.getPermsApi();
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         final String GUILD_MASTER = this.getPrefix() + "guildmaster";
         final String GUILD_OFFICER = this.getPrefix() + "officer";
         final String GUILD_MEMBER = this.getPrefix() + "member";

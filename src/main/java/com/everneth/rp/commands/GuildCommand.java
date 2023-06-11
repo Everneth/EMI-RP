@@ -6,7 +6,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import com.everneth.rp.InviteManager;
 import com.everneth.rp.models.Guild;
-import com.everneth.rp.models.GuildResponse;
+import com.everneth.rp.models.ActionResponse;
 import com.everneth.rp.models.Invite;
 
 import org.bukkit.command.CommandSender;
@@ -20,13 +20,13 @@ public class GuildCommand extends BaseCommand {
     {
         Guild guild = new Guild(guildName, playerName, primColor, secColor, isRp);
 
-        GuildResponse response = guild.createGuild();
+        ActionResponse response = guild.createGuild();
         sender.sendMessage(response.getMessage());
     }
     @Subcommand("accept")
     public void onGuildAccept(CommandSender sender)
     {
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
         Player player = (Player) sender;
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
 
@@ -51,7 +51,7 @@ public class GuildCommand extends BaseCommand {
     public void onGuildLeave(CommandSender sender)
     {
         Player player = (Player) sender;
-        GuildResponse response = Guild.leaveGuild(player.getUniqueId());
+        ActionResponse response = Guild.leaveGuild(player.getUniqueId());
         sender.sendMessage(response.getMessage());
     }
 
@@ -64,7 +64,7 @@ public class GuildCommand extends BaseCommand {
         Guild guild = Guild.getGuildByOfficer(officer);
 
         // Send this data to the guild model, let the model figure things out.
-        GuildResponse response = guild.inviteToGuild(invitee, officer, guild);
+        ActionResponse response = guild.inviteToGuild(invitee, officer, guild);
 
         officer.sendMessage(response.getMessage());
     }
@@ -74,7 +74,7 @@ public class GuildCommand extends BaseCommand {
     {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
-        GuildResponse response = new GuildResponse();
+        ActionResponse response = new ActionResponse();
 
         response = guild.kickFromGuild(playerToKick);
         sender.sendMessage(response.getMessage());
@@ -85,7 +85,7 @@ public class GuildCommand extends BaseCommand {
     {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
-        GuildResponse response = guild.promoteMember(playerToPromote);
+        ActionResponse response = guild.promoteMember(playerToPromote);
         sender.sendMessage(response.getMessage());
     }
     @CommandPermission("emi.rp.guild.gm")
@@ -94,7 +94,7 @@ public class GuildCommand extends BaseCommand {
     {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
-        GuildResponse response = guild.demoteMember(playerToDemote);
+        ActionResponse response = guild.demoteMember(playerToDemote);
         sender.sendMessage(response.getMessage());
     }
     @CommandPermission("emi.rp.gm")
@@ -102,7 +102,7 @@ public class GuildCommand extends BaseCommand {
     public void onGuildRemove(CommandSender sender, String guildToRemove)
     {
         Guild guild = Guild.getGuildByName(guildToRemove);
-        GuildResponse response = guild.removeGuild();
+        ActionResponse response = guild.removeGuild();
         sender.sendMessage(response.getMessage());
     }
 }
