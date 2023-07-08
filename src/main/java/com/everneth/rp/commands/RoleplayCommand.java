@@ -1,18 +1,24 @@
 package com.everneth.rp.commands;
 
+import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
+import com.everneth.rp.models.ActionResponse;
+import com.everneth.rp.models.RPSeason;
 import org.bukkit.command.CommandSender;
 
 @CommandAlias("roleplay|rp")
-public class RoleplayCommand {
+public class RoleplayCommand extends BaseCommand {
 
     @CommandPermission("emi.rp.gm")
     @Subcommand("season create")
-    public void onRpSeasonCreate(CommandSender sender)
+    public void onRpSeasonCreate(CommandSender sender, String name, int typeId, int themeId, @Optional boolean allowGuilds)
     {
-
+        RPSeason season = new RPSeason(name, typeId, themeId, allowGuilds);
+        ActionResponse response = season.createSeason();
+        sender.sendMessage(response.getMessage());
     }
     @CommandPermission("emi.rp.gm")
     @Subcommand("season remove")

@@ -6,6 +6,7 @@ import co.aikar.idb.Database;
 import co.aikar.idb.DatabaseOptions;
 import co.aikar.idb.PooledDatabaseOptions;
 import com.everneth.rp.commands.GuildCommand;
+import com.everneth.rp.commands.RoleplayCommand;
 import com.everneth.rp.events.JoinEvent;
 import com.everneth.rp.events.LeaveEvent;
 import com.everneth.rp.models.EMIPlayer;
@@ -76,6 +77,7 @@ public class RP extends JavaPlugin {
     {
         commandManager = new BukkitCommandManager(this);
         commandManager.registerCommand(new GuildCommand());
+        commandManager.registerCommand(new RoleplayCommand());
     }
 
     private void registerListeners()

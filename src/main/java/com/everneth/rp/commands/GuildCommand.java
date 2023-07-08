@@ -26,11 +26,10 @@ public class GuildCommand extends BaseCommand {
     @Subcommand("accept")
     public void onGuildAccept(CommandSender sender)
     {
-        ActionResponse response = new ActionResponse();
         Player player = (Player) sender;
         Invite guildInvite = InviteManager.getInviteManager().findInvite(player);
 
-        response = guildInvite.getGuild().joinGuild(guildInvite.getGuild().getGuildId(), guildInvite.getPlayerId());
+        ActionResponse response = guildInvite.getGuild().joinGuild(guildInvite.getGuild().getGuildId(), guildInvite.getPlayerId());
         if(response.isSuccessfulAction())
         {
             guildInvite.accept();
@@ -74,9 +73,7 @@ public class GuildCommand extends BaseCommand {
     {
         Player officer = (Player) sender;
         Guild guild = Guild.getGuildByOfficer(officer);
-        ActionResponse response = new ActionResponse();
-
-        response = guild.kickFromGuild(playerToKick);
+        ActionResponse response = guild.kickFromGuild(playerToKick);
         sender.sendMessage(response.getMessage());
     }
     @CommandPermission("emi.rp.guild.gm")
