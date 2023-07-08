@@ -39,8 +39,21 @@ public class RoleplayCommand {
 
     }
 
+    @CommandPermission("emi.rp.gm")
+    @Subcommand("season pause")
+    public void onRpSeasonPause(CommandSender sender)
+    {
+
+    }
+
     @Subcommand("season list")
     public void onRpSeasonList(CommandSender sender)
+    {
+
+    }
+
+    @Subcommand("season kick")
+    public void onRpSeasonKick(CommandSender sender)
     {
 
     }
