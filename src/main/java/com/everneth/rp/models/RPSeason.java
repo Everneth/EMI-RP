@@ -1,29 +1,34 @@
 package com.everneth.rp.models;
 
 import co.aikar.idb.DB;
+import co.aikar.idb.DbRow;
 import com.everneth.rp.RP;
 
 import javax.swing.*;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class RPSeason {
     private int id;
     private String name;
     private int seasonTypeId;
     private int seasonThemeId;
-    private boolean allowGuilds;
+    private int allowGuilds;
     private String dateCreated;
     private String dateStarted;
     private String dateEnded;
     private int resultId;
 
     // Fallback empty ctor
-    public RPSeason () {}
+    public RPSeason () {
+        this.id = 0;
+    }
 
     // Season create ctor
-    public RPSeason (String name, int typeId, int themeId, boolean allowGuilds)
+    public RPSeason (String name, int typeId, int themeId, int allowGuilds)
     {
         Date now = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -38,6 +43,20 @@ public class RPSeason {
         this.resultId = 1;
     }
 
+    public RPSeason(int id, String seasonName, int seasonTypeId, int seasonThemeId, int allowGuilds, String dateCreated,
+                    String dateStarted, String dateEnded, int seasonResultId)
+    {
+        Date now = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        this.id = id;
+        this.name = seasonName;
+        this.seasonTypeId = seasonTypeId;
+        this.seasonThemeId = seasonThemeId;
+        this.allowGuilds = allowGuilds;
+        this.dateCreated = format.format(dateCreated);
+    }
+
 
     public ActionResponse createSeason()
     {
@@ -50,7 +69,7 @@ public class RPSeason {
                     this.getName(),
                     this.getSeasonTypeId(),
                     this.getSeasonThemeId(),
-                    this.isAllowGuilds(),
+                    this.getAllowGuilds(),
                     this.getDateCreated(),
                     null,
                     null,
@@ -77,9 +96,23 @@ public class RPSeason {
         return new ActionResponse("", false);
     }
 
-    public <T> ActionResponse startSeason(T t)
+    public ActionResponse startSeason()
     {
-        return new ActionResponse("", false);
+        if(!isSeasonCurrentlyActive()) {
+            if (this.getId() == 0)
+                return new ActionResponse("No season found to start!", false);
+            if (this.getDateStarted() != null)
+                return new ActionResponse("Season already started!", false);
+            else {
+                Date now = new Date();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                DB.executeUpdateAsync("UPDATE seasons SET date_started = ?", format.format(now));
+                return new ActionResponse("Season " + this.getName() + "has begun!", true);
+            }
+        }
+        else {
+            return new ActionResponse("There is a season active. You can not start a new one until the previous is ended.", false);
+        }
     }
 
     public <T> ActionResponse endSeason(T t)
@@ -108,6 +141,66 @@ public class RPSeason {
         return new ActionResponse("", false);
 
     }
+
+    // Private methods
+
+    public boolean isSeasonCurrentlyActive()
+    {
+        CompletableFuture<DbRow> futureSeason;
+        DbRow season;
+        futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE date_started IS NOT NULL AND date_ended IS NULL");
+        try {
+            season = futureSeason.get();
+            return season != null;
+        }
+        catch (InterruptedException e) {
+            RP.getPlugin().getLogger().info("Interrupted while getting RP Season: " + e.getMessage());
+        }
+        catch (ExecutionException e) {
+            RP.getPlugin().getLogger().info("Could not execute query to get RP Season: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public static <T> RPSeason getSeason(T t)
+    {
+        CompletableFuture<DbRow> futureSeason;
+        DbRow season;
+        if(t instanceof Integer) {
+            futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE id = ? AND date_ended IS NULL", t);
+        }
+        else if (t instanceof String) {
+            futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE season_name = ? AND date_ended IS NULL", t);
+        }
+        else {
+            return new RPSeason();
+        }
+        try {
+            season = futureSeason.get();
+            if(season == null)
+                return new RPSeason();
+            return new RPSeason(
+                    season.getInt("id"),
+                    season.getString("season_name"),
+                    season.getInt("season_type_id"),
+                    season.getInt("Season_theme_id"),
+                    season.getInt("allow_guilds"),
+                    season.getString("date_created"),
+                    season.getString("date_started"),
+                    season.getString("date_ended"),
+                    season.getInt("season_result_id")
+            );
+        }
+        catch (InterruptedException e) {
+            RP.getPlugin().getLogger().info("Interrupted while getting RP Season: " + e.getMessage());
+        }
+        catch (ExecutionException e) {
+            RP.getPlugin().getLogger().info("Could not execute query to get RP Season: " + e.getMessage());
+        }
+        return new RPSeason();
+    }
+
+    // Getters and setters
 
     public int getId() {
         return id;
@@ -141,11 +234,11 @@ public class RPSeason {
         this.seasonThemeId = seasonThemeId;
     }
 
-    public boolean isAllowGuilds() {
+    public int getAllowGuilds() {
         return allowGuilds;
     }
 
-    public void setAllowGuilds(boolean allowGuilds) {
+    public void setAllowGuilds(int allowGuilds) {
         this.allowGuilds = allowGuilds;
     }
 
