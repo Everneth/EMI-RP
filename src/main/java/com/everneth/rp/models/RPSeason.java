@@ -91,9 +91,24 @@ public class RPSeason {
         return new ActionResponse("", false);
     }
 
-    public <T> ActionResponse removeSeason(T t)
+    public ActionResponse removeSeason(boolean override)
     {
-        return new ActionResponse("", false);
+        if(isSeasonCurrentlyActive())
+        {
+            if (this.getDateStarted() != null && !override)
+                return new ActionResponse("[WARN] Season is in progress! If you still wish to remove it, please perform the command with optional override parameter.", false);
+            else if (this.getDateStarted() != null && override)
+            {
+                DB.executeUpdateAsync("DELETE FROM seasons WHERE id = ?", this.getId());
+                return new ActionResponse("Season " + this.getName() + " has been removed!", true);
+            }
+        }
+        else
+        {
+            DB.executeUpdateAsync("DELETE FROM seasons WHERE id = ?", this.getId());
+            return new ActionResponse("Season " + this.getName() + " has been removed!", true);
+        }
+        return new ActionResponse("Error occurred when deleting Season " + this.getName() + ". Please check the logs.", false);
     }
 
     public ActionResponse startSeason()
@@ -107,7 +122,7 @@ public class RPSeason {
                 Date now = new Date();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 DB.executeUpdateAsync("UPDATE seasons SET date_started = ?", format.format(now));
-                return new ActionResponse("Season " + this.getName() + "has begun!", true);
+                return new ActionResponse("Season " + this.getName() + " has begun!", true);
             }
         }
         else {
@@ -126,7 +141,7 @@ public class RPSeason {
                 Date now = new Date();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 DB.executeUpdateAsync("UPDATE seasons SET date_ended = ?", format.format(now));
-                return new ActionResponse("Season " + this.getName() + "has ended!", true);
+                return new ActionResponse("Season " + this.getName() + " has ended!", true);
             }
         }
         else {

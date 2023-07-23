@@ -3,6 +3,7 @@ package com.everneth.rp.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
 import com.everneth.rp.InviteManager;
 import com.everneth.rp.models.Guild;
@@ -16,7 +17,7 @@ import org.bukkit.entity.Player;
 public class GuildCommand extends BaseCommand {
     @CommandPermission("emi.rp.gm")
     @Subcommand("create")
-    public void onGuildPlayerCreate(CommandSender sender, String playerName, String guildName, String primColor, String secColor, boolean isRp)
+    public void onGuildPlayerCreate(CommandSender sender, String playerName, String guildName, String primColor, String secColor, @Default("false") boolean isRp)
     {
         Guild guild = new Guild(guildName, playerName, primColor, secColor, isRp);
 

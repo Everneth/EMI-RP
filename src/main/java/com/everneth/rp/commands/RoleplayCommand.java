@@ -1,10 +1,7 @@
 package com.everneth.rp.commands;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Optional;
-import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.*;
 import com.everneth.rp.RP;
 import com.everneth.rp.models.ActionResponse;
 import com.everneth.rp.models.RPSeason;
@@ -25,9 +22,11 @@ public class RoleplayCommand extends BaseCommand {
     }
     @CommandPermission("emi.rp.gm")
     @Subcommand("season remove")
-    public void onRpSeasonRemove(CommandSender sender)
+    public void onRpSeasonRemove(CommandSender sender, String name, @Default("false") boolean override)
     {
-
+        RPSeason season = RPSeason.getSeason(name);
+        ActionResponse response = season.removeSeason(override);
+        sender.sendMessage(response.getMessage());
     }
     @CommandPermission("emi.rp.gm")
     @Subcommand("season edit")
