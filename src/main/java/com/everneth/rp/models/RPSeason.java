@@ -115,9 +115,23 @@ public class RPSeason {
         }
     }
 
-    public <T> ActionResponse endSeason(T t)
+    public ActionResponse endSeason()
     {
-        return new ActionResponse("", false);
+        if(isSeasonCurrentlyActive()) {
+            if (this.getId() == 0)
+                return new ActionResponse("No season found to end!", false);
+            if (this.getDateStarted() == null)
+                return new ActionResponse("Season has not started!", false);
+            else {
+                Date now = new Date();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                DB.executeUpdateAsync("UPDATE seasons SET date_ended = ?", format.format(now));
+                return new ActionResponse("Season " + this.getName() + "has ended!", true);
+            }
+        }
+        else {
+            return new ActionResponse("There is not a season active. You can not end a season without one in progress!", false);
+        }
     }
 
     public <T> ActionResponse pauseSeason(T t)

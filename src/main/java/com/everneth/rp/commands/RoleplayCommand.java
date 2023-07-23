@@ -48,9 +48,14 @@ public class RoleplayCommand extends BaseCommand {
     }
     @CommandPermission("emi.rp.gm")
     @Subcommand("season end")
-    public void onRpSeasonEnd(CommandSender sender)
+    public void onRpSeasonEnd(CommandSender sender, String name)
     {
-
+        RPSeason season = RPSeason.getSeason(name);
+        ActionResponse response = season.endSeason();
+        if(response.isSuccessfulAction())
+            Bukkit.broadcastMessage(response.getMessage());
+        else
+            sender.sendMessage(response.getMessage());
     }
 
     @CommandPermission("emi.rp.gm")
