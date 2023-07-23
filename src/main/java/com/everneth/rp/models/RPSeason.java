@@ -154,9 +154,16 @@ public class RPSeason {
         return new ActionResponse("", false);
     }
 
-    public ActionResponse getAllSeasons()
+    public ActionResponse getCurrentSeason()
     {
-        return new ActionResponse("", false);
+        RPSeason current = getSeason(-1);
+        if(current.getId() == 0)
+            return new ActionResponse("No Seasons are in the works at this time.", false);
+        else
+        {
+            cloneSeason(current);
+            return new ActionResponse("Here are the details of the current season.", true);
+        }
     }
 
     public <T> ActionResponse joinSeason(T t)
@@ -172,6 +179,17 @@ public class RPSeason {
     }
 
     // Private methods
+
+    public void cloneSeason(RPSeason seasonToClone)
+    {
+        this.setId(seasonToClone.getId());
+        this.setSeasonThemeId(seasonToClone.getSeasonThemeId());
+        this.setSeasonTypeId((seasonToClone.getSeasonTypeId()));
+        this.setName(seasonToClone.getName());
+        this.setDateCreated(seasonToClone.getDateCreated());
+        this.setDateStarted(seasonToClone.getDateStarted());
+        this.setAllowGuilds(seasonToClone.getAllowGuilds());
+    }
 
     public boolean isSeasonCurrentlyActive()
     {
@@ -196,7 +214,10 @@ public class RPSeason {
         CompletableFuture<DbRow> futureSeason;
         DbRow season;
         if(t instanceof Integer) {
-            futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE id = ? AND date_ended IS NULL", t);
+            if((Integer)t == -1)
+                futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE date_started IS NOT NULL", t);
+            else
+                futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE id = ? AND date_ended IS NULL", t);
         }
         else if (t instanceof String) {
             futureSeason = DB.getFirstRowAsync("SELECT * FROM seasons WHERE season_name = ? AND date_ended IS NULL", t);

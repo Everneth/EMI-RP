@@ -8,6 +8,8 @@ import com.everneth.rp.models.RPSeason;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+
 @CommandAlias("roleplay|rp")
 public class RoleplayCommand extends BaseCommand {
 
@@ -67,7 +69,17 @@ public class RoleplayCommand extends BaseCommand {
     @Subcommand("season list")
     public void onRpSeasonList(CommandSender sender)
     {
-
+        RPSeason season = new RPSeason();
+        ActionResponse response = season.getCurrentSeason();
+        if(response.isSuccessfulAction())
+        {
+            // TODO: GetFriendlyInfo method required to give type and theme as names rather than IDs
+            sender.sendMessage(response.getMessage());
+            sender.sendMessage("=========================================================");
+            sender.sendMessage(season.getName() + " - " + season.getSeasonThemeId() + " --- " );
+        }
+        else
+            sender.sendMessage(response.getMessage());
     }
 
     @Subcommand("season kick")
